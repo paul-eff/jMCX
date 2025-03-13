@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/java-21-red">
 </p>
 Currently there aren't any sophisticated libraries to interact with Minecraft Anvil (more to come) files in Java (read, edit and write). 
-And those that are around haven't been updated in a while or are directly integrated to projects like [mcaselector](https://github.com/Querz/mcaselector). 
+And those that are around haven't been updated in a while or are directly integrated to projects like mcaselector by Querz. 
 
 With this library I want to provide an up to date and efficient (and also overengineered) way to interact with Anvil (more to come) files.
 
@@ -29,6 +29,7 @@ jMCX will in the near future be part of [MinecraftOfflineOnlineConverter](https:
 
 # Sources
 - https://minecraft.wiki/w/Region_file_format
+- Dependencies: [jNBT](https://github.com/paul-eff/jNBT)
 
 # Disclaimer
 Please always make a backup of your files before using this tool.
