@@ -1,4 +1,4 @@
-# jNBT v0.1
+# jMCX v0.1
 <p align="center">
   <img src="https://img.shields.io/badge/version-0.1-blue">
   <img src="https://img.shields.io/badge/minecraft-1.21.4 (Java)-green">
