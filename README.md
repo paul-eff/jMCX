@@ -1,6 +1,6 @@
-# jMCX v0.1
+# jMCX v0.2
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.1-blue">
+  <img src="https://img.shields.io/badge/version-0.2-blue">
   <img src="https://img.shields.io/badge/minecraft-1.21.4 (Java)-green">
   <img src="https://img.shields.io/badge/java-21-red">
 </p>
@@ -12,10 +12,10 @@ With this library I want to provide an up to date and efficient (and also overen
 jMCX will in the near future be part of [MinecraftOfflineOnlineConverter](https://github.com/paul-eff/MinecraftOfflineOnlineConverter) to enable UUID conversion down to entity level.
 
 ### Supports
-- Operations: Currently only reading
+- Operations: Reading and writing (.mca from/to file)
 - Compression types: LZIP, GZIP and NONE
 ### WIP
-- Operations: Editing and writing
+- Operations: Editing
 - Compression types: LZ4
 ### Future
 - Bedrock Region format

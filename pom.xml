@@ -6,7 +6,7 @@
 
     <groupId>me.pauleff</groupId>
     <artifactId>jMCX</artifactId>
-    <version>0.1-ALPHA</version>
+    <version>0.2-BETA</version>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>

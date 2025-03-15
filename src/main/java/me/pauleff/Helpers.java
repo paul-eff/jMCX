@@ -23,4 +23,12 @@ public class Helpers
         buffer.rewind();
         return buffer.getInt();
     }
+
+    public static byte[] padToSectorSize(byte[] data, int sectorSize)
+    {
+        int neededPadding = sectorSize - (data.length % sectorSize);
+        byte[] paddedData = new byte[data.length + neededPadding];
+        System.arraycopy(data, 0, paddedData, 0, data.length);
+        return paddedData;
+    }
 }

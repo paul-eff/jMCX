@@ -10,8 +10,8 @@ import java.util.Arrays;
  */
 public class Location
 {
-    private final int offset;
-    private final int sectorCount;
+    private int offset;
+    private int sectorCount;
 
     /**
      * Constructs a Location object from a byte array.
@@ -27,6 +27,21 @@ public class Location
         }
         this.offset = Helpers.readInt(Arrays.copyOf(locationBytes, 3), ByteOrder.BIG_ENDIAN);
         this.sectorCount = Helpers.readInt(Arrays.copyOfRange(locationBytes, 3, 4), ByteOrder.BIG_ENDIAN);
+    }
+
+    public static Location createEmptyLocation()
+    {
+        return new Location(new byte[]{0,0,0,0});
+    }
+
+    protected void setOffset(int offset)
+    {
+        this.offset = offset;
+    }
+
+    protected void setSectorCount(int sectorCount)
+    {
+        this.sectorCount = sectorCount;
     }
 
     /**

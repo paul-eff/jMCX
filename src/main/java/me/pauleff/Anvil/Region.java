@@ -28,8 +28,8 @@ public class Region
     /**
      * Constructs a Region object.
      *
-     * @param x the x-coordinate of the region
-     * @param z the z-coordinate of the region
+     * @param x         the x-coordinate of the region
+     * @param z         the z-coordinate of the region
      * @param anvilFile the RandomAccessFile for the target region file
      * @throws IOException if an I/O error occurs
      */
@@ -39,6 +39,14 @@ public class Region
         this.z = z;
         this.raf = anvilFile;
         this.chunks = readAllChunks();
+    }
+
+    public void replaceChunk(Chunk chunk) throws IOException
+    {
+        int offset = 4 * ((chunk.getX() & 31) + (chunk.getZ() & 31) * 32);
+        chunk.getLocation().setOffset(offset);
+        this.chunks.set(chunk.getIndex(), chunk);
+
     }
 
     /**
@@ -127,6 +135,31 @@ public class Region
         // TODO: Implement full method when needed
         //return new Chunk(offset, readLocation(offset), readTimestamp(offset), readChunkData(offset));
         return null;
+    }
+
+    public Chunk getChunk(int x, int z)
+    {
+        for (Chunk chunk : chunks)
+        {
+            if (chunk.getX() == x && chunk.getZ() == z)
+            {
+                return chunk;
+            }
+        }
+        return null;
+    }
+
+    public ArrayList<Chunk> getChunksWithOwnables() throws IOException
+    {
+        ArrayList<Chunk> chunksWithOwnables = new ArrayList<>();
+        for (Chunk chunk : chunks)
+        {
+            if (chunk.hasOwnableEntities())
+            {
+                chunksWithOwnables.add(chunk);
+            }
+        }
+        return chunksWithOwnables;
     }
 
     /**
