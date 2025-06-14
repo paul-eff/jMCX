@@ -128,6 +128,13 @@ public class ChunkPayload
 
     /**
      * Decompresses chunk data using the specified compression type.
+     * 
+     * Compression types according to Minecraft Wiki:
+     * 1 = GZip (unused in practice)
+     * 2 = Zlib (standard compression)
+     * 3 = Uncompressed
+     * 4 = LZ4 (not yet implemented)
+     * 127 = Custom compression (not supported)
      *
      * @param data            The compressed chunk data.
      * @param compressionType The compression type.
@@ -141,19 +148,36 @@ public class ChunkPayload
             switch (compressionType)
             {
                 case 1:
+                    // GZip compression (unused in practice but supported for compatibility)
                     return new GZIPInputStream(byteStream).readAllBytes();
                 case 2:
+                    // Zlib compression (standard)
                     return new InflaterInputStream(byteStream).readAllBytes();
                 case 3:
+                    // Uncompressed
                     return data;
+                case 4:
+                    // LZ4 compression (not yet implemented)
+                    throw new IOException("LZ4 compression (type 4) is not yet implemented");
+                case 127:
+                    // Custom compression (not supported)
+                    throw new IOException("Custom compression (type 127) is not supported");
                 default:
-                    throw new IOException("Unknown/Unsupported compression type: " + compressionType);
+                    throw new IOException("Unknown compression type: " + compressionType + 
+                        ". Supported types: 1 (GZip), 2 (Zlib), 3 (Uncompressed)");
             }
         }
     }
 
     /**
      * Compresses chunk data using the specified compression type.
+     * 
+     * Compression types according to Minecraft Wiki:
+     * 1 = GZip (unused in practice)
+     * 2 = Zlib (standard compression)
+     * 3 = Uncompressed
+     * 4 = LZ4 (not yet implemented)
+     * 127 = Custom compression (not supported)
      *
      * @param data            The uncompressed chunk data.
      * @param compressionType The compression type.
@@ -168,21 +192,31 @@ public class ChunkPayload
             switch (compressionType)
             {
                 case 1:
+                    // GZip compression (unused in practice but supported for compatibility)
                     try (GZIPOutputStream gzipStream = new GZIPOutputStream(byteStream))
                     {
                         inputStream.transferTo(gzipStream);
                     }
                     break;
                 case 2:
+                    // Zlib compression (standard)
                     try (DeflaterOutputStream deflaterStream = new DeflaterOutputStream(byteStream))
                     {
                         inputStream.transferTo(deflaterStream);
                     }
                     break;
                 case 3:
+                    // Uncompressed
                     return data;
+                case 4:
+                    // LZ4 compression (not yet implemented)
+                    throw new IOException("LZ4 compression (type 4) is not yet implemented");
+                case 127:
+                    // Custom compression (not supported)
+                    throw new IOException("Custom compression (type 127) is not supported");
                 default:
-                    throw new IOException("Unknown/Unsupported compression type: " + compressionType);
+                    throw new IOException("Unknown compression type: " + compressionType + 
+                        ". Supported types: 1 (GZip), 2 (Zlib), 3 (Uncompressed)");
             }
             return byteStream.toByteArray();
         }
