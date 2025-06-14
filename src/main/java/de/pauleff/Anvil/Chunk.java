@@ -1,4 +1,4 @@
-package me.pauleff.Anvil;
+package de.pauleff.Anvil;
 
 import me.paulferlitz.IO.NBTReader;
 import me.paulferlitz.NBTTags.Tag_Compound;
@@ -160,6 +160,14 @@ public class Chunk
         int regionX = (int) Math.floor(this.x / 32.0f);
         int regionZ = (int) Math.floor(this.z / 32.0f);
         return new int[]{regionX, regionZ};
+    }
+
+    public boolean isBlockInChunk(int blockX, int blockZ)
+    {
+        int chunkX = (int) Math.floor(blockX / 16.0);
+        int chunkZ = (int) Math.floor(blockZ / 16.0);
+
+        return (chunkX == this.x && chunkZ == this.z);
     }
 
     /**

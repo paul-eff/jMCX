@@ -1,7 +1,7 @@
-package me.pauleff.Anvil;
+package de.pauleff.Anvil;
 
-import me.pauleff.Exceptions.ChunkToLargeException;
-import me.pauleff.Helpers;
+import de.pauleff.Exceptions.ChunkToLargeException;
+import de.pauleff.Helpers;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

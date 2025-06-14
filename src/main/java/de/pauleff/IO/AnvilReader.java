@@ -1,7 +1,7 @@
-package me.pauleff.IO;
+package de.pauleff.IO;
 
-import me.pauleff.Anvil.Chunk;
-import me.pauleff.Anvil.Region;
+import de.pauleff.Anvil.Chunk;
+import de.pauleff.Anvil.Region;
 
 import java.io.File;
 import java.io.IOException;

@@ -1,4 +1,4 @@
-package me.pauleff;
+package de.pauleff;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

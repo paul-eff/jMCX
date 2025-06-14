@@ -1,6 +1,6 @@
-package me.pauleff.Anvil;
+package de.pauleff.Anvil;
 
-import me.pauleff.Helpers;
+import de.pauleff.Helpers;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;

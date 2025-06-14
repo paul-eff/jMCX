@@ -1,4 +1,4 @@
-package me.pauleff.Exceptions;
+package de.pauleff.Exceptions;
 
 public class ChunkToLargeException extends RuntimeException
 {
