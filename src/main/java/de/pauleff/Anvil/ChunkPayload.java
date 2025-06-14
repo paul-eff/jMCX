@@ -16,6 +16,7 @@ import java.util.zip.InflaterInputStream;
 
 /**
  * The ChunkPayload class represents the actual chunk's data.
+ * According to the Minecraft Wiki, chunks are always less than 1MiB (1,048,576 bytes).
  */
 public class ChunkPayload
 {
@@ -29,9 +30,19 @@ public class ChunkPayload
      *
      * @param payload the byte array representing the chunk payload
      * @throws IOException if an I/O error occurs during decompression
+     * @throws ChunkToLargeException if the payload exceeds the maximum chunk size
      */
     public ChunkPayload(byte[] payload) throws IOException
     {
+        // Validate payload size
+        if (payload.length > MAX_CHUNK_SIZE)
+        {
+            throw new ChunkToLargeException(
+                "Chunk payload exceeds maximum size. Size: " + payload.length + 
+                " bytes, Maximum: " + MAX_CHUNK_SIZE + " bytes"
+            );
+        }
+        
         this.payloadLength = payload.length;
         if (this.payloadLength == 0)
         {
@@ -42,6 +53,16 @@ public class ChunkPayload
         } else
         {
             this.length = Helpers.readInt(Arrays.copyOfRange(payload, 0, 4), ByteOrder.BIG_ENDIAN);
+            
+            // Validate length field doesn't exceed remaining payload
+            if (this.length < 0 || this.length > payload.length - 5)
+            {
+                throw new IOException(
+                    "Invalid chunk length field: " + this.length + 
+                    ". Payload size: " + payload.length + " bytes"
+                );
+            }
+            
             this.compressionType = payload[4];
             this.data = Arrays.copyOfRange(payload, 5, 5 + this.length);
         }
@@ -57,10 +78,34 @@ public class ChunkPayload
         this.length = length;
     }
 
+    /**
+     * The maximum chunk size as specified by Minecraft Wiki (1MiB).
+     */
+    public static final int MAX_CHUNK_SIZE = 1048576; // 1MiB = 1024 * 1024 bytes
+
     protected void compressAndSetData(byte[] data) throws IOException
     {
+        // Validate input data size before compression
+        if (data.length > MAX_CHUNK_SIZE)
+        {
+            throw new ChunkToLargeException(
+                "Uncompressed chunk data exceeds maximum size. Size: " + data.length + 
+                " bytes, Maximum: " + MAX_CHUNK_SIZE + " bytes"
+            );
+        }
+        
         byte[] buffer = compressData(data, getCompressionType());
-        if ((buffer.length + 4 + 1) > 1048576) throw new ChunkToLargeException(buffer.length + 4 + 1);
+        
+        // Validate total payload size (compressed data + 4 bytes length + 1 byte compression type)
+        int totalPayloadSize = buffer.length + 4 + 1;
+        if (totalPayloadSize > MAX_CHUNK_SIZE)
+        {
+            throw new ChunkToLargeException(
+                "Compressed chunk payload exceeds maximum size. Size: " + totalPayloadSize + 
+                " bytes, Maximum: " + MAX_CHUNK_SIZE + " bytes"
+            );
+        }
+        
         this.data = buffer;
         setLength(buffer.length);
         // Actual data length + 4 bytes for length + 1 byte for compression type
