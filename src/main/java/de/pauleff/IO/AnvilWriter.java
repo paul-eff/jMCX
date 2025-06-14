@@ -79,7 +79,17 @@ public class AnvilWriter
             buffer.putInt(length);
             buffer.put((byte) compressionType);
             buffer.put(data);
-            byte[] paddedData = Helpers.padToSectorSize(buffer.array(), 4096);
+            byte[] paddedData = Helpers.padToSectorSize(buffer.array());
+            
+            // Validate that the chunk offset is sector-aligned
+            long writeOffset = chunk.getLocation().getOffset() * 4096L;
+            if (!Helpers.isSectorAligned(writeOffset))
+            {
+                throw new IOException(
+                    "Chunk offset is not sector-aligned. Offset: " + writeOffset + 
+                    ", should be multiple of " + Helpers.SECTOR_SIZE
+                );
+            }
 
             raf.write(paddedData);
         }

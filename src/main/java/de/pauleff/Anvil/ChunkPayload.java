@@ -108,17 +108,24 @@ public class ChunkPayload
         
         this.data = buffer;
         setLength(buffer.length);
-        // Actual data length + 4 bytes for length + 1 byte for compression type
-        setPayloadLength(4096 * (int) Math.ceil((buffer.length + 4 + 1) / 4096.0));
+        // Calculate payload length using sector alignment
+        int totalSize = buffer.length + 4 + 1; // data + length field + compression type
+        setPayloadLength(Helpers.calculateSectorCount(totalSize) * Helpers.SECTOR_SIZE);
     }
 
+    /**
+     * Gets the full payload with proper sector alignment.
+     * The payload includes: 4-byte length + 1-byte compression type + data + padding to 4KiB boundary.
+     *
+     * @return the full padded payload
+     */
     public byte[] getFullPayload()
     {
         ByteBuffer buffer = ByteBuffer.allocate(5 + this.length).order(ByteOrder.BIG_ENDIAN);
         buffer.putInt(this.length);
         buffer.put(this.compressionType);
         buffer.put(this.data);
-        return Helpers.padToSectorSize(buffer.array(), 4096);
+        return Helpers.padToSectorSize(buffer.array());
     }
 
     /**
