@@ -1,8 +1,8 @@
-package de.pauleff.IO;
+package de.pauleff.jmcx.formats.anvil;
 
-import de.pauleff.Anvil.Chunk;
-import de.pauleff.Anvil.Region;
-import de.pauleff.Helpers;
+import de.pauleff.jmcx.core.Chunk;
+import de.pauleff.jmcx.core.Region;
+import de.pauleff.jmcx.util.AnvilUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -79,15 +79,15 @@ public class AnvilWriter
             buffer.putInt(length);
             buffer.put((byte) compressionType);
             buffer.put(data);
-            byte[] paddedData = Helpers.padToSectorSize(buffer.array());
+            byte[] paddedData = AnvilUtils.padToSectorSize(buffer.array());
             
             // Validate that the chunk offset is sector-aligned
             long writeOffset = chunk.getLocation().getOffset() * 4096L;
-            if (!Helpers.isSectorAligned(writeOffset))
+            if (!AnvilUtils.isSectorAligned(writeOffset))
             {
                 throw new IOException(
                     "Chunk offset is not sector-aligned. Offset: " + writeOffset + 
-                    ", should be multiple of " + Helpers.SECTOR_SIZE
+                    ", should be multiple of " + AnvilUtils.SECTOR_SIZE
                 );
             }
 

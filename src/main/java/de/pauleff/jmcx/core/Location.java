@@ -1,6 +1,6 @@
-package de.pauleff.Anvil;
+package de.pauleff.jmcx.core;
 
-import de.pauleff.Helpers;
+import de.pauleff.jmcx.util.AnvilUtils;
 
 import java.nio.ByteOrder;
 import java.util.Arrays;
@@ -25,8 +25,8 @@ public class Location
         {
             throw new IllegalArgumentException("Location bytes must be 4 bytes!");
         }
-        this.offset = Helpers.readInt(Arrays.copyOf(locationBytes, 3), ByteOrder.BIG_ENDIAN);
-        this.sectorCount = Helpers.readInt(Arrays.copyOfRange(locationBytes, 3, 4), ByteOrder.BIG_ENDIAN);
+        this.offset = AnvilUtils.readInt(Arrays.copyOf(locationBytes, 3), ByteOrder.BIG_ENDIAN);
+        this.sectorCount = AnvilUtils.readInt(Arrays.copyOfRange(locationBytes, 3, 4), ByteOrder.BIG_ENDIAN);
     }
 
     public static Location createEmptyLocation()

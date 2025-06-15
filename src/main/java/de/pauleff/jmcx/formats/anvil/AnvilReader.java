@@ -1,7 +1,7 @@
-package de.pauleff.IO;
+package de.pauleff.jmcx.formats.anvil;
 
-import de.pauleff.Anvil.Chunk;
-import de.pauleff.Anvil.Region;
+import de.pauleff.jmcx.core.Chunk;
+import de.pauleff.jmcx.core.Region;
 
 import java.io.File;
 import java.io.IOException;

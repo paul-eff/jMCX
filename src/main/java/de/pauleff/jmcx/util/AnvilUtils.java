@@ -1,12 +1,12 @@
-package de.pauleff;
+package de.pauleff.jmcx.util;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 /**
- * The Helpers class provides utility methods for MCA file operations.
+ * The AnvilUtils class provides utility methods for MCA file operations.
  */
-public class Helpers
+public class AnvilUtils
 {
     /**
      * Reads an integer from a byte array with the specified byte order.

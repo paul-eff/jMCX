@@ -1,6 +1,6 @@
-package de.pauleff.Anvil;
+package de.pauleff.jmcx.core;
 
-import de.pauleff.Helpers;
+import de.pauleff.jmcx.util.AnvilUtils;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -105,7 +105,7 @@ public class Region
             raf.seek(LOCATION_TABLE_SIZE + i * TIMESTAMP_SIZE);
             byteBuffer = new byte[4];
             raf.read(byteBuffer);
-            timestamps[i] = Helpers.readInt(byteBuffer, ByteOrder.BIG_ENDIAN);
+            timestamps[i] = AnvilUtils.readInt(byteBuffer, ByteOrder.BIG_ENDIAN);
         }
 
         // Iterate over all locations and read their chunks

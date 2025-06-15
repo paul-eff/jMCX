@@ -1,7 +1,7 @@
-package de.pauleff.Anvil;
+package de.pauleff.jmcx.core;
 
-import de.pauleff.Exceptions.ChunkToLargeException;
-import de.pauleff.Helpers;
+import de.pauleff.jmcx.exceptions.ChunkTooLargeException;
+import de.pauleff.jmcx.util.AnvilUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -37,7 +37,7 @@ public class ChunkPayload
         // Validate payload size
         if (payload.length > MAX_CHUNK_SIZE)
         {
-            throw new ChunkToLargeException(
+            throw new ChunkTooLargeException(
                 "Chunk payload exceeds maximum size. Size: " + payload.length + 
                 " bytes, Maximum: " + MAX_CHUNK_SIZE + " bytes"
             );
@@ -52,7 +52,7 @@ public class ChunkPayload
             this.data = new byte[0];
         } else
         {
-            this.length = Helpers.readInt(Arrays.copyOfRange(payload, 0, 4), ByteOrder.BIG_ENDIAN);
+            this.length = AnvilUtils.readInt(Arrays.copyOfRange(payload, 0, 4), ByteOrder.BIG_ENDIAN);
             
             // Validate length field doesn't exceed remaining payload
             if (this.length < 0 || this.length > payload.length - 5)
@@ -88,7 +88,7 @@ public class ChunkPayload
         // Validate input data size before compression
         if (data.length > MAX_CHUNK_SIZE)
         {
-            throw new ChunkToLargeException(
+            throw new ChunkTooLargeException(
                 "Uncompressed chunk data exceeds maximum size. Size: " + data.length + 
                 " bytes, Maximum: " + MAX_CHUNK_SIZE + " bytes"
             );
@@ -100,7 +100,7 @@ public class ChunkPayload
         int totalPayloadSize = buffer.length + 4 + 1;
         if (totalPayloadSize > MAX_CHUNK_SIZE)
         {
-            throw new ChunkToLargeException(
+            throw new ChunkTooLargeException(
                 "Compressed chunk payload exceeds maximum size. Size: " + totalPayloadSize + 
                 " bytes, Maximum: " + MAX_CHUNK_SIZE + " bytes"
             );
@@ -110,7 +110,7 @@ public class ChunkPayload
         setLength(buffer.length);
         // Calculate payload length using sector alignment
         int totalSize = buffer.length + 4 + 1; // data + length field + compression type
-        setPayloadLength(Helpers.calculateSectorCount(totalSize) * Helpers.SECTOR_SIZE);
+        setPayloadLength(AnvilUtils.calculateSectorCount(totalSize) * AnvilUtils.SECTOR_SIZE);
     }
 
     /**
@@ -125,7 +125,7 @@ public class ChunkPayload
         buffer.putInt(this.length);
         buffer.put(this.compressionType);
         buffer.put(this.data);
-        return Helpers.padToSectorSize(buffer.array());
+        return AnvilUtils.padToSectorSize(buffer.array());
     }
 
     /**
