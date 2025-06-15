@@ -1,23 +1,26 @@
 package de.pauleff.jmcx.core;
 
+import de.pauleff.jmcx.api.IChunk;
+import de.pauleff.jmcx.api.IRegion;
 import de.pauleff.jmcx.util.AnvilUtils;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * The Region class represents a region in the Anvil file format.
  * It handles reading chunk data from a region file.
  */
-public class Region
+public class Region implements IRegion
 {
-    private final int HEADER_SIZE = 8192;
-    private final int LOCATION_TABLE_SIZE = 4096;
-    private final int LOCATION_SIZE = 4;
-    private final int TIMESTAMP_TABLE_SIZE = 4096;
-    private final int TIMESTAMP_SIZE = 4;
+    private static final int LOCATION_TABLE_SIZE = 4096;
+    private static final int LOCATION_SIZE = 4;
+    private static final int TIMESTAMP_TABLE_SIZE = 4096;
+    private static final int TIMESTAMP_SIZE = 4;
 
     private final RandomAccessFile raf;
 
@@ -41,12 +44,17 @@ public class Region
         this.chunks = readAllChunks();
     }
 
-    public void replaceChunk(Chunk chunk) throws IOException
+    @Override
+    public void replaceChunk(IChunk chunk) throws IOException
     {
-        int offset = 4 * ((chunk.getX() & 31) + (chunk.getZ() & 31) * 32);
-        chunk.getLocation().setOffset(offset);
-        this.chunks.set(chunk.getIndex(), chunk);
-
+        if (!(chunk instanceof Chunk))
+        {
+            throw new IllegalArgumentException("Chunk must be an instance of de.pauleff.jmcx.core.Chunk");
+        }
+        Chunk concreteChunk = (Chunk) chunk;
+        int offset = 4 * ((concreteChunk.getX() & 31) + (concreteChunk.getZ() & 31) * 32);
+        concreteChunk.getLocation().setOffset(offset);
+        this.chunks.set(concreteChunk.getIndex(), concreteChunk);
     }
 
     /**
@@ -75,9 +83,10 @@ public class Region
      *
      * @return the list of chunks
      */
-    public ArrayList<Chunk> getChunks()
+    @Override
+    public List<IChunk> getChunks()
     {
-        return chunks;
+        return new ArrayList<>(chunks);
     }
 
     /**
@@ -86,7 +95,7 @@ public class Region
      * @return the list of chunks
      * @throws IOException if an I/O error occurs
      */
-    public ArrayList<Chunk> readAllChunks() throws IOException
+    private ArrayList<Chunk> readAllChunks() throws IOException
     {
         int locationsCount = LOCATION_TABLE_SIZE / LOCATION_SIZE;
         int timestampsCount = TIMESTAMP_TABLE_SIZE / TIMESTAMP_SIZE;
@@ -137,21 +146,23 @@ public class Region
         return null;
     }
 
-    public Chunk getChunk(int x, int z)
+    @Override
+    public Optional<IChunk> getChunk(int chunkX, int chunkZ)
     {
         for (Chunk chunk : chunks)
         {
-            if (chunk.getX() == x && chunk.getZ() == z)
+            if (chunk.getX() == chunkX && chunk.getZ() == chunkZ)
             {
-                return chunk;
+                return Optional.of(chunk);
             }
         }
-        return null;
+        return Optional.empty();
     }
 
-    public ArrayList<Chunk> getChunksWithOwnables() throws IOException
+    @Override
+    public List<IChunk> getChunksWithOwnables() throws IOException
     {
-        ArrayList<Chunk> chunksWithOwnables = new ArrayList<>();
+        List<IChunk> chunksWithOwnables = new ArrayList<>();
         for (Chunk chunk : chunks)
         {
             if (chunk.hasOwnableEntities())
@@ -162,27 +173,46 @@ public class Region
         return chunksWithOwnables;
     }
 
-    /**
-     * Checks if a chunk is within the region.
-     *
-     * @param chunk the chunk to check
-     * @return true if the chunk is in the region, false otherwise
-     */
-    public boolean chunkInRegion(Chunk chunk)
+    @Override
+    public boolean chunkInRegion(IChunk chunk)
     {
-        int[] chunkRegionCoordinates = chunk.chunkToRegionCoordinate();
+        if (!(chunk instanceof Chunk))
+        {
+            return false;
+        }
+        Chunk concreteChunk = (Chunk) chunk;
+        int[] chunkRegionCoordinates = concreteChunk.chunkToRegionCoordinate();
         return chunkRegionCoordinates[0] == this.x && chunkRegionCoordinates[1] == this.z;
     }
 
-    /**
-     * Gets the starting block coordinates of the region.
-     *
-     * @return an array containing the x and z starting block coordinates
-     */
-    public int[] regionStartingBlockCoordinate()
+    @Override
+    public boolean containsChunk(int chunkX, int chunkZ)
+    {
+        // Check if chunk coordinates fall within this region's bounds
+        int regionStartX = this.x * 32;
+        int regionEndX = regionStartX + 31;
+        int regionStartZ = this.z * 32;
+        int regionEndZ = regionStartZ + 31;
+        
+        return chunkX >= regionStartX && chunkX <= regionEndX &&
+               chunkZ >= regionStartZ && chunkZ <= regionEndZ;
+    }
+
+    @Override
+    public int[] getStartingBlockCoordinates()
     {
         int regionX = x * 512;
         int regionZ = z * 512;
         return new int[]{regionX, regionZ};
+    }
+
+    @Override
+    public int[] getBlockCoordinateRange()
+    {
+        int startX = x * 512;
+        int endX = startX + 511;
+        int startZ = z * 512;
+        int endZ = startZ + 511;
+        return new int[]{startX, startZ, endX, endZ};
     }
 }

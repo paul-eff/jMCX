@@ -1,5 +1,6 @@
 package de.pauleff.jmcx.core;
 
+import de.pauleff.jmcx.api.IChunk;
 import de.pauleff.jnbt.api.ICompoundTag;
 import de.pauleff.jnbt.formats.binary.NBTReader;
 import de.pauleff.jnbt.formats.binary.NBTWriter;
@@ -13,7 +14,7 @@ import java.io.IOException;
  * The Chunk class represents a chunk in the Anvil file format.
  * Uses jNBT library for type-safe NBT data handling.
  */
-public class Chunk
+public class Chunk implements IChunk
 {
     private final int x;
     private final int z;
@@ -115,11 +116,9 @@ public class Chunk
      * @param data the new chunk data as NBT bytes
      * @throws IOException if an error occurs processing the data
      */
-    public void setChunkData(byte[] data) throws IOException
+    private void setChunkData(byte[] data) throws IOException
     {
-        ChunkPayload payload = this.getPayload();
-        payload.compressAndSetData(data);
-        this.payload = payload;
+        this.payload.compressAndSetData(data);
     }
 
     /**
@@ -263,18 +262,24 @@ public class Chunk
      *
      * @return an array containing the region x and z coordinates
      */
+    @Override
     public int[] chunkToRegionCoordinate()
     {
-        int regionX = (int) Math.floor(this.x / 32.0f);
-        int regionZ = (int) Math.floor(this.z / 32.0f);
-        return new int[]{regionX, regionZ};
+        return new int[]{this.x / 32, this.z / 32};
     }
 
+    /**
+     * Checks if the given block coordinates fall within this chunk.
+     *
+     * @param blockX the block x-coordinate
+     * @param blockZ the block z-coordinate
+     * @return true if the block is in this chunk
+     */
+    @Override
     public boolean isBlockInChunk(int blockX, int blockZ)
     {
-        int chunkX = (int) Math.floor(blockX / 16.0);
-        int chunkZ = (int) Math.floor(blockZ / 16.0);
-
+        int chunkX = blockX / 16;
+        int chunkZ = blockZ / 16;
         return (chunkX == this.x && chunkZ == this.z);
     }
 
@@ -283,12 +288,35 @@ public class Chunk
      *
      * @return an array containing the x and z starting block coordinates
      */
-    public int[] chunkStartingBlockCoordinate()
+    @Override
+    public int[] getStartingBlockCoordinates()
     {
         int[] regionCoordinate = chunkToRegionCoordinate();
         int chunkX = regionCoordinate[0] + (this.index % 32 * 16);
         int chunkZ = regionCoordinate[1] + (this.index % 32 * 16);
         return new int[]{chunkX, chunkZ};
+    }
+
+    @Override
+    public int[] getBlockCoordinateRange()
+    {
+        int startX = this.x * 16;
+        int endX = startX + 15;
+        int startZ = this.z * 16;
+        int endZ = startZ + 15;
+        return new int[]{startX, startZ, endX, endZ};
+    }
+
+    @Override
+    public boolean isEmpty()
+    {
+        return this.payload.getLength() == 0;
+    }
+
+    @Override
+    public int getDataSize()
+    {
+        return this.payload.getLength();
     }
 
     /**
