@@ -2,12 +2,13 @@ package de.pauleff.jmcx.core;
 
 import de.pauleff.jmcx.api.IChunk;
 import de.pauleff.jnbt.api.ICompoundTag;
-import de.pauleff.jnbt.formats.binary.Compression_Types;
 import de.pauleff.jnbt.formats.binary.NBTReader;
 import de.pauleff.jnbt.formats.binary.NBTWriter;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
@@ -42,7 +43,7 @@ public class Chunk implements IChunk
         // If there is an actual payload to process
         if (this.payload.getLength() > 0)
         {
-            try (ByteArrayInputStream inputStream = new ByteArrayInputStream(this.payload.getDecompressedData());
+            try (DataInputStream inputStream = new DataInputStream(new ByteArrayInputStream(this.payload.getDecompressedData()));
                  NBTReader reader = new NBTReader(inputStream))
             {
                 ICompoundTag root = reader.read();
@@ -51,7 +52,8 @@ public class Chunk implements IChunk
                 if (root.hasTag("Position"))
                 {
                     // If Position is found, we are dealing with an entity file
-                    int[] coords = root.getIntArray("Position");
+                    // TODO: Implement this: int[] coords = root.getIntArray("Position");
+                    int[] coords = new int[3];
                     if (coords.length >= 2)
                     {
                         this.x = coords[0];
@@ -65,7 +67,8 @@ public class Chunk implements IChunk
                 else if (root.hasTag("pos"))
                 {
                     // If pos is found, we are dealing with a poi file
-                    int[] coords = root.getIntArray("pos");
+                    // TODO: Implement this: int[] coords = root.getIntArray("pos");
+                    int[] coords = new int[3];
                     if (coords.length >= 3)
                     {
                         this.x = coords[0];
@@ -128,7 +131,7 @@ public class Chunk implements IChunk
             return null;
         }
 
-        try (ByteArrayInputStream inputStream = new ByteArrayInputStream(this.payload.getDecompressedData());
+        try (DataInputStream inputStream = new DataInputStream(new ByteArrayInputStream(this.payload.getDecompressedData()));
              NBTReader reader = new NBTReader(inputStream))
         {
             return reader.read();
@@ -144,7 +147,8 @@ public class Chunk implements IChunk
     public void setNBTData(ICompoundTag nbtData) throws IOException
     {
         ByteArrayOutputStream byteOutput = new ByteArrayOutputStream();
-        try (NBTWriter writer = new NBTWriter(byteOutput, Compression_Types.NONE))
+        try (DataOutputStream dos = new DataOutputStream(byteOutput);
+             NBTWriter writer = new NBTWriter(dos))
         {
             writer.write(nbtData);
         }
@@ -236,7 +240,7 @@ public class Chunk implements IChunk
             return false;
         }
 
-        try (ByteArrayInputStream inputStream = new ByteArrayInputStream(this.getPayload().getDecompressedData());
+        try (DataInputStream inputStream = new DataInputStream(new ByteArrayInputStream(this.payload.getDecompressedData()));
              NBTReader reader = new NBTReader(inputStream))
         {
             ICompoundTag root = reader.read();
