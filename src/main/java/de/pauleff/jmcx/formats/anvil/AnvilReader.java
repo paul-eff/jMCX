@@ -1,18 +1,21 @@
 package de.pauleff.jmcx.formats.anvil;
 
-import de.pauleff.jmcx.core.Chunk;
+import de.pauleff.jmcx.api.IAnvilReader;
+import de.pauleff.jmcx.api.IChunk;
+import de.pauleff.jmcx.api.IRegion;
 import de.pauleff.jmcx.core.Region;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.Optional;
 
 /**
  * The AnvilReader class is responsible for reading Anvil region files.
  * Currently supports .mca (Anvil format) files only.
  * Future versions may include .mcr (McRegion format) support.
  */
-public class AnvilReader
+public class AnvilReader implements IAnvilReader
 {
     private final File anvilFile;
     private final RandomAccessFile raf;
@@ -38,31 +41,63 @@ public class AnvilReader
      * @return the Region object representing the region in the Anvil file
      * @throws IOException if an I/O error occurs
      */
-    public Region readAnvilFile() throws IOException
+    @Override
+    public IRegion readRegion() throws IOException
     {
-        Region region = null;
         try
         {
             int[] coordinates = parseFilenameToCoordinates(anvilFile.getName());
-            region = new Region(coordinates[0], coordinates[1], raf);
+            return new Region(coordinates[0], coordinates[1], raf);
         } finally
         {
             raf.close();
         }
-        return region;
     }
 
-    /**
-     * Reads a specific chunk from the Anvil file.
-     * The created RandomAccessFile will not be closed after completion.
-     *
-     * @param x the x-coordinate of the chunk
-     * @param z the z-coordinate of the chunk
-     * @return the Chunk object representing the chunk in the Anvil file
-     */
-    public Chunk readChunk(int x, int z)
+    @Override
+    public Optional<IChunk> readChunk(int chunkX, int chunkZ) throws IOException
     {
-        return null;
+        // TODO: Implement individual chunk reading when needed
+        return Optional.empty();
+    }
+
+    @Override
+    public boolean isValidFormat()
+    {
+        return "mca".equals(getFileFormat());
+    }
+
+    @Override
+    public int[] getRegionCoordinates()
+    {
+        return parseFilenameToCoordinates(anvilFile.getName());
+    }
+
+    @Override
+    public String getFilePath()
+    {
+        return anvilFile.getAbsolutePath();
+    }
+
+    @Override
+    public boolean canRead()
+    {
+        return anvilFile.exists() && anvilFile.canRead();
+    }
+
+    @Override
+    public long getFileSize() throws IOException
+    {
+        return anvilFile.length();
+    }
+
+    @Override
+    public void close() throws IOException
+    {
+        if (raf != null)
+        {
+            raf.close();
+        }
     }
 
     /**
@@ -87,14 +122,11 @@ public class AnvilReader
      *
      * @return "mca" for Anvil format
      */
+    @Override
     public String getFileFormat()
     {
         String filename = anvilFile.getName().toLowerCase();
-        if (filename.endsWith(".mca"))
-        {
-            return "mca";
-        }
-        return "unknown";
+        return filename.endsWith(".mca") ? "mca" : "unknown";
     }
 
     /**

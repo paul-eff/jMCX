@@ -1,5 +1,8 @@
 package de.pauleff.jmcx.formats.anvil;
 
+import de.pauleff.jmcx.api.IAnvilWriter;
+import de.pauleff.jmcx.api.IChunk;
+import de.pauleff.jmcx.api.IRegion;
 import de.pauleff.jmcx.core.Chunk;
 import de.pauleff.jmcx.core.Region;
 import de.pauleff.jmcx.util.AnvilUtils;
@@ -12,15 +15,16 @@ import java.nio.ByteOrder;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
-public class AnvilWriter
+public class AnvilWriter implements IAnvilWriter
 {
     private final File anvilFile;
     private final RandomAccessFile raf;
+    private boolean backupEnabled = true;
 
     /**
-     * Constructs an AnvilReader object.
+     * Constructs an AnvilWriter object.
      *
-     * @param anvilFile the Anvil file to read
+     * @param anvilFile the Anvil file to write
      * @throws IOException if an I/O error occurs
      */
     public AnvilWriter(File anvilFile) throws IOException
@@ -29,17 +33,18 @@ public class AnvilWriter
         this.raf = new RandomAccessFile(anvilFile, "rw");
     }
 
-    public void writeAnvilFile(Region region) throws IOException
+    private void writeAnvilFile(Region region) throws IOException
     {
-        if (Files.exists(anvilFile.toPath()))
+        if (backupEnabled && Files.exists(anvilFile.toPath()))
         {
             File backupFile = new File(anvilFile.getPath() + ".bak");
             Files.copy(anvilFile.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
             System.out.printf("Created backup of file %s%n", anvilFile.getName());
         }
         // Write Header (locations, timestamps)
-        for (Chunk chunk : region.getChunks())
+        for (IChunk iChunk : region.getChunks())
         {
+            Chunk chunk = (Chunk) iChunk;
             raf.seek(chunk.getIndex() * 4L);
             int offset = chunk.getLocation().getOffset();
             int sectorCount = chunk.getLocation().getSectorCount();
@@ -66,8 +71,9 @@ public class AnvilWriter
         }
 
         // Write Chunks + padding
-        for (Chunk chunk : region.getChunks())
+        for (IChunk iChunk : region.getChunks())
         {
+            Chunk chunk = (Chunk) iChunk;
             if (chunk.getLocation().getOffset() == 0) continue;
             raf.seek(chunk.getLocation().getOffset() * 4096L);
 
@@ -93,6 +99,86 @@ public class AnvilWriter
 
             raf.write(paddedData);
         }
-        raf.close();
+        // Don't close RAF here as it's managed by the close() method
+    }
+
+    @Override
+    public void writeRegion(IRegion region) throws IOException
+    {
+        if (!(region instanceof Region))
+        {
+            throw new IllegalArgumentException("Region must be an instance of de.pauleff.jmcx.core.Region");
+        }
+        writeAnvilFile((Region) region);
+    }
+
+    @Override
+    public void writeChunk(IChunk chunk) throws IOException
+    {
+        throw new UnsupportedOperationException("Individual chunk writing not yet implemented");
+    }
+
+    @Override
+    public void createBackup(boolean enable)
+    {
+        this.backupEnabled = enable;
+    }
+
+    @Override
+    public boolean isBackupEnabled()
+    {
+        return backupEnabled;
+    }
+
+    @Override
+    public String getFilePath()
+    {
+        return anvilFile.getAbsolutePath();
+    }
+
+    @Override
+    public boolean canWrite()
+    {
+        return anvilFile.canWrite() || (!anvilFile.exists() && anvilFile.getParentFile().canWrite());
+    }
+
+    @Override
+    public boolean validateRegion(IRegion region) throws IOException
+    {
+        if (region == null)
+        {
+            return false;
+        }
+        // TODO: Basic validation - could be expanded
+        return region.getChunks().size() <= 1024;
+    }
+
+    @Override
+    public boolean validateChunk(IChunk chunk) throws IOException
+    {
+        if (chunk == null)
+        {
+            return false;
+        }
+        // TODO: Basic validation - could be expanded
+        return chunk.getX() >= 0 && chunk.getZ() >= 0;
+    }
+
+    @Override
+    public void flush() throws IOException
+    {
+        if (raf != null)
+        {
+            raf.getFD().sync();
+        }
+    }
+
+    @Override
+    public void close() throws IOException
+    {
+        if (raf != null)
+        {
+            raf.close();
+        }
     }
 }
