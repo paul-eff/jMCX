@@ -31,17 +31,7 @@ public class Location
 
     public static Location createEmptyLocation()
     {
-        return new Location(new byte[]{0,0,0,0});
-    }
-
-    protected void setOffset(int offset)
-    {
-        this.offset = offset;
-    }
-
-    protected void setSectorCount(int sectorCount)
-    {
-        this.sectorCount = sectorCount;
+        return new Location(new byte[]{0, 0, 0, 0});
     }
 
     /**
@@ -54,6 +44,11 @@ public class Location
         return offset;
     }
 
+    protected void setOffset(int offset)
+    {
+        this.offset = offset;
+    }
+
     /**
      * Gets the sector count of the location.
      *
@@ -62,6 +57,11 @@ public class Location
     public int getSectorCount()
     {
         return sectorCount;
+    }
+
+    protected void setSectorCount(int sectorCount)
+    {
+        this.sectorCount = sectorCount;
     }
 
     /**

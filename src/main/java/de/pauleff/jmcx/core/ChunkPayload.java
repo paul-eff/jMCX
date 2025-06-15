@@ -20,16 +20,20 @@ import java.util.zip.InflaterInputStream;
  */
 public class ChunkPayload
 {
+    /**
+     * The maximum chunk size as specified by Minecraft Wiki (1MiB).
+     */
+    public static final int MAX_CHUNK_SIZE = 1048576; // 1MiB = 1024 * 1024 bytes
+    private final byte compressionType;
     private int payloadLength;
     private int length;
-    private final byte compressionType;
     private byte[] data;
 
     /**
      * Constructs a ChunkPayload object from a byte array.
      *
      * @param payload the byte array representing the chunk payload
-     * @throws IOException if an I/O error occurs during decompression
+     * @throws IOException           if an I/O error occurs during decompression
      * @throws ChunkToLargeException if the payload exceeds the maximum chunk size
      */
     public ChunkPayload(byte[] payload) throws IOException
@@ -38,11 +42,11 @@ public class ChunkPayload
         if (payload.length > MAX_CHUNK_SIZE)
         {
             throw new ChunkTooLargeException(
-                "Chunk payload exceeds maximum size. Size: " + payload.length + 
-                " bytes, Maximum: " + MAX_CHUNK_SIZE + " bytes"
+                    "Chunk payload exceeds maximum size. Size: " + payload.length +
+                            " bytes, Maximum: " + MAX_CHUNK_SIZE + " bytes"
             );
         }
-        
+
         this.payloadLength = payload.length;
         if (this.payloadLength == 0)
         {
@@ -53,35 +57,20 @@ public class ChunkPayload
         } else
         {
             this.length = AnvilUtils.readInt(Arrays.copyOfRange(payload, 0, 4), ByteOrder.BIG_ENDIAN);
-            
+
             // Validate length field doesn't exceed remaining payload
             if (this.length < 0 || this.length > payload.length - 5)
             {
                 throw new IOException(
-                    "Invalid chunk length field: " + this.length + 
-                    ". Payload size: " + payload.length + " bytes"
+                        "Invalid chunk length field: " + this.length +
+                                ". Payload size: " + payload.length + " bytes"
                 );
             }
-            
+
             this.compressionType = payload[4];
             this.data = Arrays.copyOfRange(payload, 5, 5 + this.length);
         }
     }
-
-    private void setPayloadLength(int payloadLength)
-    {
-        this.payloadLength = payloadLength;
-    }
-
-    private void setLength(int length)
-    {
-        this.length = length;
-    }
-
-    /**
-     * The maximum chunk size as specified by Minecraft Wiki (1MiB).
-     */
-    public static final int MAX_CHUNK_SIZE = 1048576; // 1MiB = 1024 * 1024 bytes
 
     protected void compressAndSetData(byte[] data) throws IOException
     {
@@ -89,23 +78,23 @@ public class ChunkPayload
         if (data.length > MAX_CHUNK_SIZE)
         {
             throw new ChunkTooLargeException(
-                "Uncompressed chunk data exceeds maximum size. Size: " + data.length + 
-                " bytes, Maximum: " + MAX_CHUNK_SIZE + " bytes"
+                    "Uncompressed chunk data exceeds maximum size. Size: " + data.length +
+                            " bytes, Maximum: " + MAX_CHUNK_SIZE + " bytes"
             );
         }
-        
+
         byte[] buffer = compressData(data, getCompressionType());
-        
+
         // Validate total payload size (compressed data + 4 bytes length + 1 byte compression type)
         int totalPayloadSize = buffer.length + 4 + 1;
         if (totalPayloadSize > MAX_CHUNK_SIZE)
         {
             throw new ChunkTooLargeException(
-                "Compressed chunk payload exceeds maximum size. Size: " + totalPayloadSize + 
-                " bytes, Maximum: " + MAX_CHUNK_SIZE + " bytes"
+                    "Compressed chunk payload exceeds maximum size. Size: " + totalPayloadSize +
+                            " bytes, Maximum: " + MAX_CHUNK_SIZE + " bytes"
             );
         }
-        
+
         this.data = buffer;
         setLength(buffer.length);
         // Calculate payload length using sector alignment
@@ -138,6 +127,11 @@ public class ChunkPayload
         return payloadLength;
     }
 
+    private void setPayloadLength(int payloadLength)
+    {
+        this.payloadLength = payloadLength;
+    }
+
     /**
      * Gets the length of the chunk data.
      *
@@ -146,6 +140,11 @@ public class ChunkPayload
     public int getLength()
     {
         return length;
+    }
+
+    private void setLength(int length)
+    {
+        this.length = length;
     }
 
     /**
@@ -180,7 +179,7 @@ public class ChunkPayload
 
     /**
      * Decompresses chunk data using the specified compression type.
-     * 
+     * <p>
      * Compression types according to Minecraft Wiki:
      * 1 = GZip (unused in practice)
      * 2 = Zlib (standard compression)
@@ -215,15 +214,15 @@ public class ChunkPayload
                     // Custom compression (not supported)
                     throw new IOException("Custom compression (type 127) is not supported");
                 default:
-                    throw new IOException("Unknown compression type: " + compressionType + 
-                        ". Supported types: 1 (GZip), 2 (Zlib), 3 (Uncompressed)");
+                    throw new IOException("Unknown compression type: " + compressionType +
+                            ". Supported types: 1 (GZip), 2 (Zlib), 3 (Uncompressed)");
             }
         }
     }
 
     /**
      * Compresses chunk data using the specified compression type.
-     * 
+     * <p>
      * Compression types according to Minecraft Wiki:
      * 1 = GZip (unused in practice)
      * 2 = Zlib (standard compression)
@@ -267,8 +266,8 @@ public class ChunkPayload
                     // Custom compression (not supported)
                     throw new IOException("Custom compression (type 127) is not supported");
                 default:
-                    throw new IOException("Unknown compression type: " + compressionType + 
-                        ". Supported types: 1 (GZip), 2 (Zlib), 3 (Uncompressed)");
+                    throw new IOException("Unknown compression type: " + compressionType +
+                            ". Supported types: 1 (GZip), 2 (Zlib), 3 (Uncompressed)");
             }
             return byteStream.toByteArray();
         }

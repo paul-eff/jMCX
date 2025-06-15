@@ -24,7 +24,7 @@ public class AnvilReader implements IAnvilReader
      * Constructs an AnvilReader object.
      *
      * @param anvilFile the Anvil file to read (.mca format)
-     * @throws IOException if an I/O error occurs
+     * @throws IOException              if an I/O error occurs
      * @throws IllegalArgumentException if the file format is not supported
      */
     public AnvilReader(File anvilFile) throws IOException
@@ -112,7 +112,7 @@ public class AnvilReader implements IAnvilReader
         if (!filename.endsWith(".mca"))
         {
             throw new IllegalArgumentException(
-                "Unsupported file format. Currently only .mca (Anvil) files are supported, got: " + filename
+                    "Unsupported file format. Currently only .mca (Anvil) files are supported, got: " + filename
             );
         }
     }
@@ -143,20 +143,19 @@ public class AnvilReader implements IAnvilReader
         if (parts.length < 4 || !"r".equals(parts[0]))
         {
             throw new IllegalArgumentException(
-                "Invalid region filename format. Expected: r.x.z.mca, got: " + filename
+                    "Invalid region filename format. Expected: r.x.z.mca, got: " + filename
             );
         }
-        
+
         try
         {
             int x = Integer.parseInt(parts[1]);
             int z = Integer.parseInt(parts[2]);
             return new int[]{x, z};
-        }
-        catch (NumberFormatException e)
+        } catch (NumberFormatException e)
         {
             throw new IllegalArgumentException(
-                "Invalid coordinates in filename: " + filename + ". Coordinates must be integers.", e
+                    "Invalid coordinates in filename: " + filename + ". Coordinates must be integers.", e
             );
         }
     }

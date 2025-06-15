@@ -30,7 +30,7 @@ public class ChunkTooLargeException extends RuntimeException
      * Constructs a ChunkTooLargeException with a custom message and cause.
      *
      * @param message the custom error message
-     * @param cause the cause of the exception
+     * @param cause   the cause of the exception
      */
     public ChunkTooLargeException(String message, Throwable cause)
     {

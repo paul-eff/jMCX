@@ -47,11 +47,10 @@ public class Region implements IRegion
     @Override
     public void replaceChunk(IChunk chunk) throws IOException
     {
-        if (!(chunk instanceof Chunk))
+        if (!(chunk instanceof Chunk concreteChunk))
         {
             throw new IllegalArgumentException("Chunk must be an instance of de.pauleff.jmcx.core.Chunk");
         }
-        Chunk concreteChunk = (Chunk) chunk;
         int offset = 4 * ((concreteChunk.getX() & 31) + (concreteChunk.getZ() & 31) * 32);
         concreteChunk.getLocation().setOffset(offset);
         this.chunks.set(concreteChunk.getIndex(), concreteChunk);
@@ -176,11 +175,10 @@ public class Region implements IRegion
     @Override
     public boolean chunkInRegion(IChunk chunk)
     {
-        if (!(chunk instanceof Chunk))
+        if (!(chunk instanceof Chunk concreteChunk))
         {
             return false;
         }
-        Chunk concreteChunk = (Chunk) chunk;
         int[] chunkRegionCoordinates = concreteChunk.chunkToRegionCoordinate();
         return chunkRegionCoordinates[0] == this.x && chunkRegionCoordinates[1] == this.z;
     }
@@ -193,9 +191,9 @@ public class Region implements IRegion
         int regionEndX = regionStartX + 31;
         int regionStartZ = this.z * 32;
         int regionEndZ = regionStartZ + 31;
-        
+
         return chunkX >= regionStartX && chunkX <= regionEndX &&
-               chunkZ >= regionStartZ && chunkZ <= regionEndZ;
+                chunkZ >= regionStartZ && chunkZ <= regionEndZ;
     }
 
     @Override

@@ -86,14 +86,14 @@ public class AnvilWriter implements IAnvilWriter
             buffer.put((byte) compressionType);
             buffer.put(data);
             byte[] paddedData = AnvilUtils.padToSectorSize(buffer.array());
-            
+
             // Validate that the chunk offset is sector-aligned
             long writeOffset = chunk.getLocation().getOffset() * 4096L;
             if (!AnvilUtils.isSectorAligned(writeOffset))
             {
                 throw new IOException(
-                    "Chunk offset is not sector-aligned. Offset: " + writeOffset + 
-                    ", should be multiple of " + AnvilUtils.SECTOR_SIZE
+                        "Chunk offset is not sector-aligned. Offset: " + writeOffset +
+                                ", should be multiple of " + AnvilUtils.SECTOR_SIZE
                 );
             }
 

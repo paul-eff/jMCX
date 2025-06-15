@@ -2,9 +2,9 @@ package de.pauleff.jmcx.core;
 
 import de.pauleff.jmcx.api.IChunk;
 import de.pauleff.jnbt.api.ICompoundTag;
+import de.pauleff.jnbt.formats.binary.Compression_Types;
 import de.pauleff.jnbt.formats.binary.NBTReader;
 import de.pauleff.jnbt.formats.binary.NBTWriter;
-import de.pauleff.jnbt.formats.binary.Compression_Types;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -22,7 +22,7 @@ public class Chunk implements IChunk
     private final int index;
     private final Location location;
     private final int timestamp;
-    private ChunkPayload payload;
+    private final ChunkPayload payload;
 
     /**
      * Constructs a Chunk object.
@@ -46,7 +46,7 @@ public class Chunk implements IChunk
                  NBTReader reader = new NBTReader(inputStream))
             {
                 ICompoundTag root = reader.read();
-                
+
                 // Check for entity file format (Position tag)
                 if (root.hasTag("Position"))
                 {
@@ -56,8 +56,7 @@ public class Chunk implements IChunk
                     {
                         this.x = coords[0];
                         this.z = coords[1];
-                    }
-                    else
+                    } else
                     {
                         throw new IOException("Invalid entity file format: Position array too short");
                     }
@@ -71,38 +70,33 @@ public class Chunk implements IChunk
                     {
                         this.x = coords[0];
                         this.z = coords[2];
-                    }
-                    else
+                    } else
                     {
                         throw new IOException("Invalid POI file format: pos array too short");
                     }
-                }
-                else
+                } else
                 {
                     // Standard region file format
                     if (root.hasTag("xPos") && root.hasTag("zPos"))
                     {
                         this.x = root.getInt("xPos");
                         this.z = root.getInt("zPos");
-                    }
-                    else
+                    } else
                     {
                         throw new IOException("Invalid chunk format: missing xPos/zPos tags");
                     }
                 }
-                
+
                 // Get data version
                 if (root.hasTag("DataVersion"))
                 {
                     this.dataVersion = root.getInt("DataVersion");
-                }
-                else
+                } else
                 {
                     throw new IOException("Invalid chunk format: missing DataVersion tag");
                 }
             }
-        }
-        else
+        } else
         {
             this.x = 0;
             this.z = 0;
@@ -133,7 +127,7 @@ public class Chunk implements IChunk
         {
             return null;
         }
-        
+
         try (ByteArrayInputStream inputStream = new ByteArrayInputStream(this.payload.getDecompressedData());
              NBTReader reader = new NBTReader(inputStream))
         {
@@ -241,18 +235,18 @@ public class Chunk implements IChunk
         {
             return false;
         }
-        
+
         try (ByteArrayInputStream inputStream = new ByteArrayInputStream(this.getPayload().getDecompressedData());
              NBTReader reader = new NBTReader(inputStream))
         {
             ICompoundTag root = reader.read();
-            
+
             // Check for Owner tag (tamed animals, etc.)
             boolean hasOwner = root.hasTag("Owner");
-            
+
             // Check for Target tag (hostile mobs with targets)
             boolean hasTarget = root.hasTag("Target");
-            
+
             return hasOwner || hasTarget;
         }
     }

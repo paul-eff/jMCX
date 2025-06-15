@@ -9,6 +9,11 @@ import java.nio.ByteOrder;
 public class AnvilUtils
 {
     /**
+     * The standard sector size for MCA files (4KiB).
+     */
+    public static final int SECTOR_SIZE = 4096; // 4KiB
+
+    /**
      * Reads an integer from a byte array with the specified byte order.
      *
      * @param bytes the byte array to read from
@@ -25,15 +30,10 @@ public class AnvilUtils
     }
 
     /**
-     * The standard sector size for MCA files (4KiB).
-     */
-    public static final int SECTOR_SIZE = 4096; // 4KiB
-
-    /**
      * Pads data to the specified sector size boundary.
      * According to the Minecraft Wiki, chunks are padded to 4KiB sector boundaries.
      *
-     * @param data the data to pad
+     * @param data       the data to pad
      * @param sectorSize the sector size to pad to (should be 4096 for MCA files)
      * @return the padded data
      * @throws IllegalArgumentException if sectorSize is not positive
@@ -44,26 +44,26 @@ public class AnvilUtils
         {
             throw new IllegalArgumentException("Sector size must be positive, got: " + sectorSize);
         }
-        
+
         if (data == null)
         {
             throw new IllegalArgumentException("Data cannot be null");
         }
-        
+
         // If data is already aligned, no padding needed
         int remainder = data.length % sectorSize;
         if (remainder == 0)
         {
             return data;
         }
-        
+
         // Calculate padding needed
         int neededPadding = sectorSize - remainder;
         byte[] paddedData = new byte[data.length + neededPadding];
-        
+
         // Copy original data
         System.arraycopy(data, 0, paddedData, 0, data.length);
-        
+
         // Padding bytes are automatically zero-initialized
         return paddedData;
     }
