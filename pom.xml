@@ -56,6 +56,15 @@
     </properties>
 
     <dependencies>
+        <!-- Local jNBT Dependency -->
+        <dependency>
+            <groupId>de.pauleff.jnbt</groupId>
+            <artifactId>jnbt</artifactId>
+            <version>1.6.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/../jNBT/target/jnbt-1.6.0.jar</systemPath>
+        </dependency>
+
         <!-- Test Dependencies -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
