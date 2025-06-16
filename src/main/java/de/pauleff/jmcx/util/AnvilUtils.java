@@ -104,4 +104,186 @@ public class AnvilUtils
     {
         return offset % SECTOR_SIZE == 0;
     }
+
+    /**
+     * Converts block coordinates to chunk coordinates.
+     *
+     * @param blockX the block X coordinate
+     * @param blockZ the block Z coordinate
+     * @return an array containing chunk X and Z coordinates
+     */
+    public static int[] blockToChunk(int blockX, int blockZ)
+    {
+        int chunkX = blockX >> 4; // blockX / 16
+        int chunkZ = blockZ >> 4; // blockZ / 16
+        return new int[]{chunkX, chunkZ};
+    }
+
+    /**
+     * Converts chunk coordinates to region coordinates.
+     *
+     * @param chunkX the chunk X coordinate
+     * @param chunkZ the chunk Z coordinate
+     * @return an array containing region X and Z coordinates
+     */
+    public static int[] chunkToRegion(int chunkX, int chunkZ)
+    {
+        int regionX = chunkX >> 5; // chunkX / 32
+        int regionZ = chunkZ >> 5; // chunkZ / 32
+        return new int[]{regionX, regionZ};
+    }
+
+    /**
+     * Converts block coordinates directly to region coordinates.
+     *
+     * @param blockX the block X coordinate
+     * @param blockZ the block Z coordinate
+     * @return an array containing region X and Z coordinates
+     */
+    public static int[] blockToRegion(int blockX, int blockZ)
+    {
+        int[] chunkCoords = blockToChunk(blockX, blockZ);
+        return chunkToRegion(chunkCoords[0], chunkCoords[1]);
+    }
+
+    /**
+     * Generates a region filename from region coordinates.
+     *
+     * @param regionX the region X coordinate
+     * @param regionZ the region Z coordinate
+     * @return the region filename (e.g., "r.0.0.mca")
+     */
+    public static String generateRegionFilename(int regionX, int regionZ)
+    {
+        return "r." + regionX + "." + regionZ + ".mca";
+    }
+
+    /**
+     * Parses region coordinates from a region filename.
+     *
+     * @param filename the region filename (e.g., "r.0.0.mca")
+     * @return an array containing region X and Z coordinates
+     * @throws IllegalArgumentException if the filename format is invalid
+     */
+    public static int[] parseRegionFilename(String filename)
+    {
+        if (filename == null || filename.trim().isEmpty())
+        {
+            throw new IllegalArgumentException("Filename cannot be null or empty");
+        }
+
+        String[] parts = filename.split("\\.");
+        if (parts.length != 4 || !"r".equals(parts[0]) || !"mca".equals(parts[3]))
+        {
+            throw new IllegalArgumentException(
+                    "Invalid region filename format. Expected: r.x.z.mca, got: " + filename
+            );
+        }
+
+        try
+        {
+            int x = Integer.parseInt(parts[1]);
+            int z = Integer.parseInt(parts[2]);
+            return new int[]{x, z};
+        }
+        catch (NumberFormatException e)
+        {
+            throw new IllegalArgumentException(
+                    "Invalid coordinates in filename: " + filename + ". Coordinates must be integers.", e
+            );
+        }
+    }
+
+    /**
+     * Validates that a file is a valid region file based on its name and basic properties.
+     *
+     * @param file the file to validate
+     * @return true if the file appears to be a valid region file
+     */
+    public static boolean isValidRegionFile(java.io.File file)
+    {
+        if (file == null || !file.exists() || !file.isFile())
+        {
+            return false;
+        }
+
+        try
+        {
+            // Validate filename format
+            parseRegionFilename(file.getName());
+            
+            // Basic size check - must be at least header size
+            return file.length() >= 8192; // 8KiB header minimum
+        }
+        catch (IllegalArgumentException e)
+        {
+            return false;
+        }
+    }
+
+    /**
+     * Calculates the chunk index within a region from chunk coordinates.
+     *
+     * @param chunkX the chunk X coordinate
+     * @param chunkZ the chunk Z coordinate
+     * @return the chunk index (0-1023) within the region
+     */
+    public static int calculateChunkIndex(int chunkX, int chunkZ)
+    {
+        // Convert to region-local coordinates
+        int localX = chunkX & 31; // chunkX % 32
+        int localZ = chunkZ & 31; // chunkZ % 32
+        return localZ * 32 + localX;
+    }
+
+    /**
+     * Calculates chunk coordinates from a region-local chunk index.
+     *
+     * @param regionX the region X coordinate
+     * @param regionZ the region Z coordinate
+     * @param chunkIndex the chunk index within the region (0-1023)
+     * @return an array containing global chunk X and Z coordinates
+     * @throws IllegalArgumentException if chunk index is out of range
+     */
+    public static int[] calculateChunkCoordinates(int regionX, int regionZ, int chunkIndex)
+    {
+        if (chunkIndex < 0 || chunkIndex >= 1024)
+        {
+            throw new IllegalArgumentException("Chunk index must be between 0 and 1023, got: " + chunkIndex);
+        }
+
+        int localX = chunkIndex % 32;
+        int localZ = chunkIndex / 32;
+        
+        int globalChunkX = regionX * 32 + localX;
+        int globalChunkZ = regionZ * 32 + localZ;
+        
+        return new int[]{globalChunkX, globalChunkZ};
+    }
+
+    /**
+     * Validates sector alignment and size constraints for MCA format.
+     *
+     * @param offset the chunk offset in sectors
+     * @param sectorCount the number of sectors
+     * @param fileSize the total file size in bytes
+     * @return true if the chunk placement is valid
+     */
+    public static boolean isValidChunkPlacement(int offset, int sectorCount, long fileSize)
+    {
+        if (offset < 2) // Must be after header (2 sectors)
+        {
+            return false;
+        }
+        
+        if (sectorCount <= 0 || sectorCount > 255)
+        {
+            return false;
+        }
+        
+        long chunkStart = (long) offset * SECTOR_SIZE;
+        long chunkEnd = chunkStart + (long) sectorCount * SECTOR_SIZE;
+        
+        return chunkEnd <= fileSize;
+    }
 }

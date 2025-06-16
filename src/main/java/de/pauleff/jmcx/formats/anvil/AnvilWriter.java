@@ -149,7 +149,7 @@ public class AnvilWriter implements IAnvilWriter
         {
             return false;
         }
-        // TODO: Basic validation - could be expanded
+        // Basic validation - could be expanded
         return region.getChunks().size() <= 1024;
     }
 
@@ -160,7 +160,7 @@ public class AnvilWriter implements IAnvilWriter
         {
             return false;
         }
-        // TODO: Basic validation - could be expanded
+        // Basic validation - could be expanded
         return chunk.getX() >= 0 && chunk.getZ() >= 0;
     }
 
