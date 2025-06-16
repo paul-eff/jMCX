@@ -44,6 +44,38 @@ public class Region implements IRegion
         this.chunks = readAllChunks();
     }
 
+    /**
+     * Constructs a Region object from a list of chunks.
+     * Used by RegionBuilder for creating regions programmatically.
+     *
+     * @param x      the x-coordinate of the region
+     * @param z      the z-coordinate of the region
+     * @param chunks the list of chunks (must contain exactly 1024 chunks)
+     * @throws IllegalArgumentException if chunks list size is not 1024
+     */
+    public Region(int x, int z, List<IChunk> chunks)
+    {
+        if (chunks.size() != 1024)
+        {
+            throw new IllegalArgumentException("Chunks list must contain exactly 1024 chunks, got: " + chunks.size());
+        }
+        
+        this.x = x;
+        this.z = z;
+        this.raf = null; // No file backing this region
+        this.chunks = new ArrayList<>(1024);
+        
+        // Convert IChunk to Chunk instances
+        for (IChunk chunk : chunks)
+        {
+            if (!(chunk instanceof Chunk))
+            {
+                throw new IllegalArgumentException("All chunks must be instances of de.pauleff.jmcx.core.Chunk");
+            }
+            this.chunks.add((Chunk) chunk);
+        }
+    }
+
     @Override
     public void replaceChunk(IChunk chunk) throws IOException
     {
