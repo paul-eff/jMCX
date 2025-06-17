@@ -6,6 +6,8 @@ import de.pauleff.jmcx.api.IChunk;
 import de.pauleff.jmcx.api.IRegion;
 import de.pauleff.jmcx.util.ChunkFilter;
 
+import static de.pauleff.jmcx.util.AnvilConstants.MCA_EXTENSION;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -40,7 +42,7 @@ public class AdvancedExamples
         // Process all MCA files
         try (Stream<Path> files = Files.walk(worldRegionDir))
         {
-            List<File> mcaFiles = files.filter(path -> path.toString().endsWith(".mca"))
+            List<File> mcaFiles = files.filter(path -> path.toString().endsWith(MCA_EXTENSION))
                     .map(Path::toFile)
                     .toList();
 
@@ -89,7 +91,7 @@ public class AdvancedExamples
 
         try (Stream<Path> files = Files.walk(worldRegionDir))
         {
-            List<File> mcaFiles = files.filter(path -> path.toString().endsWith(".mca"))
+            List<File> mcaFiles = files.filter(path -> path.toString().endsWith(MCA_EXTENSION))
                     .map(Path::toFile)
                     .toList();
 

@@ -3,6 +3,8 @@ package de.pauleff.jmcx.core;
 import de.pauleff.jmcx.exceptions.ChunkTooLargeException;
 import de.pauleff.jmcx.util.AnvilUtils;
 
+import static de.pauleff.jmcx.util.AnvilConstants.MAX_CHUNK_SIZE_BYTES;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -20,10 +22,6 @@ import java.util.zip.InflaterInputStream;
  */
 public class ChunkPayload
 {
-    /**
-     * The maximum chunk size as specified by Minecraft Wiki (1MiB).
-     */
-    public static final int MAX_CHUNK_SIZE = 1048576; // 1MiB = 1024 * 1024 bytes
     private final byte compressionType;
     private int payloadLength;
     private int length;
@@ -39,11 +37,11 @@ public class ChunkPayload
     public ChunkPayload(byte[] payload) throws IOException
     {
         // Validate payload size
-        if (payload.length > MAX_CHUNK_SIZE)
+        if (payload.length > MAX_CHUNK_SIZE_BYTES)
         {
             throw new ChunkTooLargeException(
                     "Chunk payload exceeds maximum size. Size: " + payload.length +
-                            " bytes, Maximum: " + MAX_CHUNK_SIZE + " bytes"
+                            " bytes, Maximum: " + MAX_CHUNK_SIZE_BYTES + " bytes"
             );
         }
 
@@ -75,11 +73,11 @@ public class ChunkPayload
     protected void compressAndSetData(byte[] data) throws IOException
     {
         // Validate input data size before compression
-        if (data.length > MAX_CHUNK_SIZE)
+        if (data.length > MAX_CHUNK_SIZE_BYTES)
         {
             throw new ChunkTooLargeException(
                     "Uncompressed chunk data exceeds maximum size. Size: " + data.length +
-                            " bytes, Maximum: " + MAX_CHUNK_SIZE + " bytes"
+                            " bytes, Maximum: " + MAX_CHUNK_SIZE_BYTES + " bytes"
             );
         }
 
@@ -87,11 +85,11 @@ public class ChunkPayload
 
         // Validate total payload size (compressed data + 4 bytes length + 1 byte compression type)
         int totalPayloadSize = buffer.length + 4 + 1;
-        if (totalPayloadSize > MAX_CHUNK_SIZE)
+        if (totalPayloadSize > MAX_CHUNK_SIZE_BYTES)
         {
             throw new ChunkTooLargeException(
                     "Compressed chunk payload exceeds maximum size. Size: " + totalPayloadSize +
-                            " bytes, Maximum: " + MAX_CHUNK_SIZE + " bytes"
+                            " bytes, Maximum: " + MAX_CHUNK_SIZE_BYTES + " bytes"
             );
         }
 

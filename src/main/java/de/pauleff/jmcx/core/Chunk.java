@@ -1,6 +1,9 @@
 package de.pauleff.jmcx.core;
 
 import de.pauleff.jmcx.api.IChunk;
+
+import static de.pauleff.jmcx.util.AnvilConstants.CHUNKS_PER_REGION_SIDE;
+import static de.pauleff.jmcx.util.AnvilConstants.BLOCKS_PER_CHUNK_SIDE;
 import de.pauleff.jnbt.api.ICompoundTag;
 import de.pauleff.jnbt.formats.binary.NBTReader;
 import de.pauleff.jnbt.formats.binary.NBTWriter;
@@ -263,7 +266,7 @@ public class Chunk implements IChunk
     @Override
     public int[] chunkToRegionCoordinate()
     {
-        return new int[]{this.x / 32, this.z / 32};
+        return new int[]{this.x / CHUNKS_PER_REGION_SIDE, this.z / CHUNKS_PER_REGION_SIDE};
     }
 
     /**
@@ -276,8 +279,8 @@ public class Chunk implements IChunk
     @Override
     public boolean isBlockInChunk(int blockX, int blockZ)
     {
-        int chunkX = blockX / 16;
-        int chunkZ = blockZ / 16;
+        int chunkX = blockX / BLOCKS_PER_CHUNK_SIDE;
+        int chunkZ = blockZ / BLOCKS_PER_CHUNK_SIDE;
         return (chunkX == this.x && chunkZ == this.z);
     }
 
@@ -290,18 +293,18 @@ public class Chunk implements IChunk
     public int[] getStartingBlockCoordinates()
     {
         int[] regionCoordinate = chunkToRegionCoordinate();
-        int chunkX = regionCoordinate[0] + (this.index % 32 * 16);
-        int chunkZ = regionCoordinate[1] + (this.index % 32 * 16);
+        int chunkX = regionCoordinate[0] + (this.index % CHUNKS_PER_REGION_SIDE * BLOCKS_PER_CHUNK_SIDE);
+        int chunkZ = regionCoordinate[1] + (this.index % CHUNKS_PER_REGION_SIDE * BLOCKS_PER_CHUNK_SIDE);
         return new int[]{chunkX, chunkZ};
     }
 
     @Override
     public int[] getBlockCoordinateRange()
     {
-        int startX = this.x * 16;
-        int endX = startX + 15;
-        int startZ = this.z * 16;
-        int endZ = startZ + 15;
+        int startX = this.x * BLOCKS_PER_CHUNK_SIDE;
+        int endX = startX + (BLOCKS_PER_CHUNK_SIDE - 1);
+        int startZ = this.z * BLOCKS_PER_CHUNK_SIDE;
+        int endZ = startZ + (BLOCKS_PER_CHUNK_SIDE - 1);
         return new int[]{startX, startZ, endX, endZ};
     }
 

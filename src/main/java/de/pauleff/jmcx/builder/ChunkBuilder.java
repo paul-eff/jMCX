@@ -7,6 +7,9 @@ import de.pauleff.jnbt.api.ICompoundTag;
 
 import java.io.IOException;
 
+import static de.pauleff.jmcx.util.AnvilConstants.CHUNKS_PER_REGION;
+import static de.pauleff.jmcx.util.AnvilConstants.CHUNKS_PER_REGION_SIDE;
+
 /**
  * Builder class for creating Chunk objects using the builder pattern.
  * Provides a fluent API for constructing chunks with NBT data.
@@ -191,15 +194,15 @@ public class ChunkBuilder
     /**
      * Sets the chunk index within the region.
      *
-     * @param index the chunk index (0-1023)
+     * @param index the chunk index (0-(CHUNKS_PER_REGION - 1))
      * @return this builder instance
      * @throws IllegalArgumentException if index is out of range
      */
     public ChunkBuilder withIndex(int index)
     {
-        if (index < 0 || index >= 1024)
+        if (index < 0 || index >= CHUNKS_PER_REGION)
         {
-            throw new IllegalArgumentException("Chunk index must be between 0 and 1023, got: " + index);
+            throw new IllegalArgumentException("Chunk index must be between 0 and " + (CHUNKS_PER_REGION - 1) + ", got: " + index);
         }
         this.index = index;
         return this;
@@ -310,9 +313,9 @@ public class ChunkBuilder
     private int calculateChunkIndex(int chunkX, int chunkZ)
     {
         // Convert to region-local coordinates
-        int localX = chunkX & 31; // chunkX % 32
-        int localZ = chunkZ & 31; // chunkZ % 32
-        return localZ * 32 + localX;
+        int localX = chunkX % CHUNKS_PER_REGION_SIDE; // chunkX % 32
+        int localZ = chunkZ % CHUNKS_PER_REGION_SIDE; // chunkZ % 32
+        return localZ * CHUNKS_PER_REGION_SIDE + localX;
     }
 
     /**

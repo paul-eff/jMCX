@@ -3,6 +3,8 @@ package de.pauleff.jmcx.api;
 import de.pauleff.jmcx.formats.anvil.AnvilReader;
 import de.pauleff.jmcx.formats.anvil.AnvilWriter;
 
+import static de.pauleff.jmcx.util.AnvilConstants.MCA_EXTENSION;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -120,7 +122,7 @@ public final class AnvilFactory
 
         String fileName = file.getName().toLowerCase();
 
-        if (fileName.endsWith(".mca"))
+        if (fileName.endsWith(MCA_EXTENSION))
         {
             return FileFormat.ANVIL_MCA;
         } else if (fileName.endsWith(".mcr"))
@@ -194,7 +196,7 @@ public final class AnvilFactory
         }
 
         String[] parts = filename.split("\\.");
-        if (parts.length != 4 || !"r".equals(parts[0]) || !"mca".equals(parts[3]))
+        if (parts.length != 4 || !"r".equals(parts[0]) || !MCA_EXTENSION.substring(1).equals(parts[3]))
         {
             return false;
         }

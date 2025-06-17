@@ -7,6 +7,9 @@ import de.pauleff.jmcx.core.Region;
 import de.pauleff.jmcx.core.Chunk;
 import de.pauleff.jmcx.core.Location;
 
+import static de.pauleff.jmcx.util.AnvilConstants.CHUNKS_PER_REGION;
+import static de.pauleff.jmcx.util.AnvilConstants.CHUNKS_PER_REGION_SIDE;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -170,9 +173,9 @@ public class RegionBuilder
      */
     public RegionBuilder removeChunk(int index)
     {
-        if (index < 0 || index >= 1024)
+        if (index < 0 || index >= CHUNKS_PER_REGION)
         {
-            throw new IllegalArgumentException("Chunk index must be between 0 and 1023, got: " + index);
+            throw new IllegalArgumentException("Chunk index must be between 0 and " + (CHUNKS_PER_REGION - 1) + ", got: " + index);
         }
         chunks.remove(index);
         return this;
@@ -232,10 +235,10 @@ public class RegionBuilder
     {
         validateBuilder();
         
-        // Create a list of all 1024 chunks (empty chunks for missing ones)
-        List<IChunk> allChunks = new ArrayList<>(1024);
+        // Create a list of all CHUNKS_PER_REGION chunks (empty chunks for missing ones)
+        List<IChunk> allChunks = new ArrayList<>(CHUNKS_PER_REGION);
         
-        for (int i = 0; i < 1024; i++)
+        for (int i = 0; i < CHUNKS_PER_REGION; i++)
         {
             IChunk chunk = chunks.get(i);
             if (chunk != null)
@@ -264,9 +267,9 @@ public class RegionBuilder
     private int calculateChunkIndex(int chunkX, int chunkZ)
     {
         // Convert to region-local coordinates
-        int localX = chunkX & 31; // chunkX % 32
-        int localZ = chunkZ & 31; // chunkZ % 32
-        return localZ * 32 + localX;
+        int localX = chunkX % CHUNKS_PER_REGION_SIDE; // chunkX % 32
+        int localZ = chunkZ % CHUNKS_PER_REGION_SIDE; // chunkZ % 32
+        return localZ * CHUNKS_PER_REGION_SIDE + localX;
     }
 
     /**
@@ -277,8 +280,8 @@ public class RegionBuilder
      */
     private void validateChunkCoordinates(IChunk chunk)
     {
-        int expectedRegionX = chunk.getX() >> 5; // chunk.getX() / 32
-        int expectedRegionZ = chunk.getZ() >> 5; // chunk.getZ() / 32
+        int expectedRegionX = chunk.getX() / CHUNKS_PER_REGION_SIDE; // chunk.getX() / 32
+        int expectedRegionZ = chunk.getZ() / CHUNKS_PER_REGION_SIDE; // chunk.getZ() / 32
         
         if (expectedRegionX != regionX || expectedRegionZ != regionZ)
         {
@@ -299,9 +302,9 @@ public class RegionBuilder
     private void validateBuilder()
     {
         // Basic validation - could be expanded
-        if (chunks.size() > 1024)
+        if (chunks.size() > CHUNKS_PER_REGION)
         {
-            throw new IllegalStateException("Too many chunks: " + chunks.size() + " (maximum 1024)");
+            throw new IllegalStateException("Too many chunks: " + chunks.size() + " (maximum " + CHUNKS_PER_REGION + ")");
         }
     }
 }

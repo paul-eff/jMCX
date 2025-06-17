@@ -3,6 +3,11 @@ package de.pauleff.jmcx.util;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+import static de.pauleff.jmcx.util.AnvilConstants.CHUNKS_PER_REGION;
+import static de.pauleff.jmcx.util.AnvilConstants.CHUNKS_PER_REGION_SIDE;
+import static de.pauleff.jmcx.util.AnvilConstants.BLOCKS_PER_CHUNK_SIDE;
+import static de.pauleff.jmcx.util.AnvilConstants.MCA_EXTENSION;
+
 /**
  * The AnvilUtils class provides utility methods for MCA file operations.
  */
@@ -114,8 +119,8 @@ public class AnvilUtils
      */
     public static int[] blockToChunk(int blockX, int blockZ)
     {
-        int chunkX = blockX >> 4; // blockX / 16
-        int chunkZ = blockZ >> 4; // blockZ / 16
+        int chunkX = blockX / BLOCKS_PER_CHUNK_SIDE; // blockX / 16
+        int chunkZ = blockZ / BLOCKS_PER_CHUNK_SIDE; // blockZ / 16
         return new int[]{chunkX, chunkZ};
     }
 
@@ -128,8 +133,8 @@ public class AnvilUtils
      */
     public static int[] chunkToRegion(int chunkX, int chunkZ)
     {
-        int regionX = chunkX >> 5; // chunkX / 32
-        int regionZ = chunkZ >> 5; // chunkZ / 32
+        int regionX = chunkX / CHUNKS_PER_REGION_SIDE; // chunkX / 32
+        int regionZ = chunkZ / CHUNKS_PER_REGION_SIDE; // chunkZ / 32
         return new int[]{regionX, regionZ};
     }
 
@@ -155,7 +160,7 @@ public class AnvilUtils
      */
     public static String generateRegionFilename(int regionX, int regionZ)
     {
-        return "r." + regionX + "." + regionZ + ".mca";
+        return "r." + regionX + "." + regionZ + MCA_EXTENSION;
     }
 
     /**
@@ -173,7 +178,7 @@ public class AnvilUtils
         }
 
         String[] parts = filename.split("\\.");
-        if (parts.length != 4 || !"r".equals(parts[0]) || !"mca".equals(parts[3]))
+        if (parts.length != 4 || !"r".equals(parts[0]) || !MCA_EXTENSION.substring(1).equals(parts[3]))
         {
             throw new IllegalArgumentException(
                     "Invalid region filename format. Expected: r.x.z.mca, got: " + filename
@@ -231,9 +236,9 @@ public class AnvilUtils
     public static int calculateChunkIndex(int chunkX, int chunkZ)
     {
         // Convert to region-local coordinates
-        int localX = chunkX & 31; // chunkX % 32
-        int localZ = chunkZ & 31; // chunkZ % 32
-        return localZ * 32 + localX;
+        int localX = chunkX % CHUNKS_PER_REGION_SIDE; // chunkX % 32
+        int localZ = chunkZ % CHUNKS_PER_REGION_SIDE; // chunkZ % 32
+        return localZ * CHUNKS_PER_REGION_SIDE + localX;
     }
 
     /**
@@ -247,16 +252,16 @@ public class AnvilUtils
      */
     public static int[] calculateChunkCoordinates(int regionX, int regionZ, int chunkIndex)
     {
-        if (chunkIndex < 0 || chunkIndex >= 1024)
+        if (chunkIndex < 0 || chunkIndex >= CHUNKS_PER_REGION)
         {
-            throw new IllegalArgumentException("Chunk index must be between 0 and 1023, got: " + chunkIndex);
+            throw new IllegalArgumentException("Chunk index must be between 0 and " + (CHUNKS_PER_REGION - 1) + ", got: " + chunkIndex);
         }
 
-        int localX = chunkIndex % 32;
-        int localZ = chunkIndex / 32;
+        int localX = chunkIndex % CHUNKS_PER_REGION_SIDE;
+        int localZ = chunkIndex / CHUNKS_PER_REGION_SIDE;
         
-        int globalChunkX = regionX * 32 + localX;
-        int globalChunkZ = regionZ * 32 + localZ;
+        int globalChunkX = regionX * CHUNKS_PER_REGION_SIDE + localX;
+        int globalChunkZ = regionZ * CHUNKS_PER_REGION_SIDE + localZ;
         
         return new int[]{globalChunkX, globalChunkZ};
     }

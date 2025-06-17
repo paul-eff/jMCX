@@ -1,12 +1,14 @@
 package de.pauleff.jmcx.api;
 
+import static de.pauleff.jmcx.util.AnvilConstants.CHUNKS_PER_REGION;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
 /**
  * Interface representing a Minecraft region containing a 32x32 grid of chunks.
- * Each region corresponds to a single .mca file and contains up to 1024 chunks.
+ * Each region corresponds to a single .mca file and contains up to CHUNKS_PER_REGION chunks.
  *
  * @author Paul Ferlitz
  * @since 0.2
@@ -28,7 +30,7 @@ public interface IRegion
     int getZ();
 
     /**
-     * Gets all 1024 chunks in this region, including empty chunks.
+     * Gets all CHUNKS_PER_REGION chunks in this region, including empty chunks.
      *
      * @return list of all chunks
      */

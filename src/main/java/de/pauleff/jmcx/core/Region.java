@@ -4,6 +4,11 @@ import de.pauleff.jmcx.api.IChunk;
 import de.pauleff.jmcx.api.IRegion;
 import de.pauleff.jmcx.util.AnvilUtils;
 
+import static de.pauleff.jmcx.util.AnvilConstants.CHUNKS_PER_REGION;
+import static de.pauleff.jmcx.util.AnvilConstants.CHUNKS_PER_REGION_SIDE;
+import static de.pauleff.jmcx.util.AnvilConstants.BLOCKS_PER_CHUNK_SIDE;
+import static de.pauleff.jmcx.util.AnvilConstants.SECTOR_SIZE_BYTES;
+
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteOrder;
@@ -17,9 +22,7 @@ import java.util.Optional;
  */
 public class Region implements IRegion
 {
-    private static final int LOCATION_TABLE_SIZE = 4096;
     private static final int LOCATION_SIZE = 4;
-    private static final int TIMESTAMP_TABLE_SIZE = 4096;
     private static final int TIMESTAMP_SIZE = 4;
 
     private final RandomAccessFile raf;
@@ -50,20 +53,20 @@ public class Region implements IRegion
      *
      * @param x      the x-coordinate of the region
      * @param z      the z-coordinate of the region
-     * @param chunks the list of chunks (must contain exactly 1024 chunks)
-     * @throws IllegalArgumentException if chunks list size is not 1024
+     * @param chunks the list of chunks (must contain exactly CHUNKS_PER_REGION chunks)
+     * @throws IllegalArgumentException if chunks list size is not CHUNKS_PER_REGION
      */
     public Region(int x, int z, List<IChunk> chunks)
     {
-        if (chunks.size() != 1024)
+        if (chunks.size() != CHUNKS_PER_REGION)
         {
-            throw new IllegalArgumentException("Chunks list must contain exactly 1024 chunks, got: " + chunks.size());
+            throw new IllegalArgumentException("Chunks list must contain exactly " + CHUNKS_PER_REGION + " chunks, got: " + chunks.size());
         }
         
         this.x = x;
         this.z = z;
         this.raf = null; // No file backing this region
-        this.chunks = new ArrayList<>(1024);
+        this.chunks = new ArrayList<>(CHUNKS_PER_REGION);
         
         // Convert IChunk to Chunk instances
         for (IChunk chunk : chunks)
@@ -83,7 +86,7 @@ public class Region implements IRegion
         {
             throw new IllegalArgumentException("Chunk must be an instance of de.pauleff.jmcx.core.Chunk");
         }
-        int offset = 4 * ((concreteChunk.getX() & 31) + (concreteChunk.getZ() & 31) * 32);
+        int offset = 4 * ((concreteChunk.getX() % CHUNKS_PER_REGION_SIDE) + (concreteChunk.getZ() % CHUNKS_PER_REGION_SIDE) * CHUNKS_PER_REGION_SIDE);
         concreteChunk.getLocation().setOffset(offset);
         this.chunks.set(concreteChunk.getIndex(), concreteChunk);
     }
@@ -109,7 +112,7 @@ public class Region implements IRegion
     }
 
     /**
-     * Gets the list of all 1024 chunks in the region.
+     * Gets the list of all CHUNKS_PER_REGION chunks in the region.
      * If a chunk was not generated yet all its values will be 0 or null.
      *
      * @return the list of chunks
@@ -128,8 +131,8 @@ public class Region implements IRegion
      */
     private ArrayList<Chunk> readAllChunks() throws IOException
     {
-        int locationsCount = LOCATION_TABLE_SIZE / LOCATION_SIZE;
-        int timestampsCount = TIMESTAMP_TABLE_SIZE / TIMESTAMP_SIZE;
+        int locationsCount = SECTOR_SIZE_BYTES / LOCATION_SIZE;
+        int timestampsCount = SECTOR_SIZE_BYTES / TIMESTAMP_SIZE;
 
         Location[] locations = new Location[locationsCount];
         int[] timestamps = new int[timestampsCount];
@@ -142,7 +145,7 @@ public class Region implements IRegion
             raf.read(byteBuffer);
             locations[i] = new Location(byteBuffer);
             // Read and save the timestamp for the location
-            raf.seek(LOCATION_TABLE_SIZE + i * TIMESTAMP_SIZE);
+            raf.seek(SECTOR_SIZE_BYTES + i * TIMESTAMP_SIZE);
             byteBuffer = new byte[4];
             raf.read(byteBuffer);
             timestamps[i] = AnvilUtils.readInt(byteBuffer, ByteOrder.BIG_ENDIAN);
@@ -153,8 +156,8 @@ public class Region implements IRegion
         for (int i = 0; i < locationsCount; i++)
         {
             Location currLocation = locations[i];
-            raf.seek(currLocation.getOffset() * 4096L);
-            byte[] chunkData = new byte[currLocation.getSectorCount() * 4096];
+            raf.seek(currLocation.getOffset() * (long) SECTOR_SIZE_BYTES);
+            byte[] chunkData = new byte[currLocation.getSectorCount() * SECTOR_SIZE_BYTES];
             raf.read(chunkData);
             chunks.add(new Chunk(i, locations[i], timestamps[i], chunkData));
         }
@@ -171,7 +174,7 @@ public class Region implements IRegion
      */
     public Chunk readChunk(int x, int z) throws IOException
     {
-        int offset = 4 * ((x & 31) + (z & 31) * 32);
+        int offset = 4 * ((x % CHUNKS_PER_REGION_SIDE) + (z % CHUNKS_PER_REGION_SIDE) * CHUNKS_PER_REGION_SIDE);
         // TODO: Implement full method when needed
         //return new Chunk(offset, readLocation(offset), readTimestamp(offset), readChunkData(offset));
         return null;
@@ -219,10 +222,10 @@ public class Region implements IRegion
     public boolean containsChunk(int chunkX, int chunkZ)
     {
         // Check if chunk coordinates fall within this region's bounds
-        int regionStartX = this.x * 32;
-        int regionEndX = regionStartX + 31;
-        int regionStartZ = this.z * 32;
-        int regionEndZ = regionStartZ + 31;
+        int regionStartX = this.x * CHUNKS_PER_REGION_SIDE;
+        int regionEndX = regionStartX + CHUNKS_PER_REGION_SIDE - 1;
+        int regionStartZ = this.z * CHUNKS_PER_REGION_SIDE;
+        int regionEndZ = regionStartZ + CHUNKS_PER_REGION_SIDE - 1;
 
         return chunkX >= regionStartX && chunkX <= regionEndX &&
                 chunkZ >= regionStartZ && chunkZ <= regionEndZ;
@@ -231,18 +234,18 @@ public class Region implements IRegion
     @Override
     public int[] getStartingBlockCoordinates()
     {
-        int regionX = x * 512;
-        int regionZ = z * 512;
+        int regionX = x * (CHUNKS_PER_REGION_SIDE * BLOCKS_PER_CHUNK_SIDE);
+        int regionZ = z * (CHUNKS_PER_REGION_SIDE * BLOCKS_PER_CHUNK_SIDE);
         return new int[]{regionX, regionZ};
     }
 
     @Override
     public int[] getBlockCoordinateRange()
     {
-        int startX = x * 512;
-        int endX = startX + 511;
-        int startZ = z * 512;
-        int endZ = startZ + 511;
+        int startX = x * (CHUNKS_PER_REGION_SIDE * BLOCKS_PER_CHUNK_SIDE);
+        int endX = startX + (CHUNKS_PER_REGION_SIDE * BLOCKS_PER_CHUNK_SIDE - 1);
+        int startZ = z * (CHUNKS_PER_REGION_SIDE * BLOCKS_PER_CHUNK_SIDE);
+        int endZ = startZ + (CHUNKS_PER_REGION_SIDE * BLOCKS_PER_CHUNK_SIDE - 1);
         return new int[]{startX, startZ, endX, endZ};
     }
 }
