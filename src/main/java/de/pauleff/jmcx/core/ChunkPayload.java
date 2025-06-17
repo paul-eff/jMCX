@@ -34,7 +34,7 @@ public class ChunkPayload
      *
      * @param payload the byte array representing the chunk payload
      * @throws IOException           if an I/O error occurs during decompression
-     * @throws ChunkToLargeException if the payload exceeds the maximum chunk size
+     * @throws ChunkTooLargeException if the payload exceeds the maximum chunk size
      */
     public ChunkPayload(byte[] payload) throws IOException
     {
