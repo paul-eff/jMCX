@@ -6,7 +6,7 @@
 
     <groupId>de.pauleff.jmcx</groupId>
     <artifactId>jmcx</artifactId>
-    <version>0.2-BETA</version>
+    <version>0.9.0-BETA</version>
     <packaging>jar</packaging>
 
     <name>jMCX</name>
@@ -60,9 +60,9 @@
         <dependency>
             <groupId>de.pauleff.jnbt</groupId>
             <artifactId>jnbt</artifactId>
-            <version>1.6.0</version>
+            <version>1.7.0</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/../jNBT/target/jnbt-1.6.0.jar</systemPath>
+            <systemPath>${project.basedir}/../jNBT/target/jnbt-1.7.0.jar</systemPath>
         </dependency>
 
         <!-- Test Dependencies -->
