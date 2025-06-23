@@ -28,7 +28,7 @@ public class AnvilUtils
     public static int readInt(byte[] bytes, ByteOrder order)
     {
         ByteBuffer buffer = ByteBuffer.allocate(4).order(order);
-        buffer.position(4 - bytes.length);  // Align to the right for smaller sizes
+        buffer.position(4 - bytes.length);
         buffer.put(bytes);
         buffer.rewind();
         return buffer.getInt();
@@ -119,8 +119,8 @@ public class AnvilUtils
      */
     public static int[] blockToChunk(int blockX, int blockZ)
     {
-        int chunkX = blockX / BLOCKS_PER_CHUNK_SIDE; // blockX / 16
-        int chunkZ = blockZ / BLOCKS_PER_CHUNK_SIDE; // blockZ / 16
+        int chunkX = blockX / BLOCKS_PER_CHUNK_SIDE;
+        int chunkZ = blockZ / BLOCKS_PER_CHUNK_SIDE;
         return new int[]{chunkX, chunkZ};
     }
 
@@ -133,8 +133,8 @@ public class AnvilUtils
      */
     public static int[] chunkToRegion(int chunkX, int chunkZ)
     {
-        int regionX = chunkX / CHUNKS_PER_REGION_SIDE; // chunkX / 32
-        int regionZ = chunkZ / CHUNKS_PER_REGION_SIDE; // chunkZ / 32
+        int regionX = chunkX / CHUNKS_PER_REGION_SIDE;
+        int regionZ = chunkZ / CHUNKS_PER_REGION_SIDE;
         return new int[]{regionX, regionZ};
     }
 
@@ -213,11 +213,10 @@ public class AnvilUtils
 
         try
         {
-            // Validate filename format
             parseRegionFilename(file.getName());
 
             // Basic size check - must be at least header size
-            return file.length() >= 8192; // 8KiB header minimum
+            return file.length() >= 8192;
         } catch (IllegalArgumentException e)
         {
             return false;

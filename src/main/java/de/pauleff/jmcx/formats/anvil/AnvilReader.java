@@ -33,7 +33,6 @@ public class AnvilReader implements IAnvilReader
     private static final int HEADER_SIZE = SECTOR_SIZE_BYTES + SECTOR_SIZE_BYTES; // 8KiB total header
     private static final int LOCATION_ENTRY_SIZE = 4; // 4 bytes per location entry
     private static final int TIMESTAMP_ENTRY_SIZE = 4; // 4 bytes per timestamp entry
-    // CHUNKS_PER_REGION constant is imported from AnvilConstants
     private static final int MINIMUM_SECTOR_OFFSET = 2; // Sectors 0-1 reserved for header
 
     private final File anvilFile;
