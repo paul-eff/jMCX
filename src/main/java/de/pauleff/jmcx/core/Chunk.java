@@ -11,8 +11,7 @@ import static de.pauleff.jmcx.util.AnvilConstants.BLOCKS_PER_CHUNK_SIDE;
 import static de.pauleff.jmcx.util.AnvilConstants.CHUNKS_PER_REGION_SIDE;
 
 /**
- * The Chunk class represents a chunk in the Anvil file format.
- * Uses jNBT library for type-safe NBT data handling.
+ * Implementation of {@link IChunk} representing a chunk in the Anvil file format.
  *
  * @author Paul Ferlitz
  */
@@ -31,11 +30,11 @@ public class Chunk implements IChunk
     /**
      * Constructs a Chunk object.
      *
-     * @param index     the index of the chunk
-     * @param location  the location of the chunk in the region file
-     * @param timestamp the timestamp of the chunk
-     * @param payload   the byte array representing the chunk payload
-     * @throws IOException if an I/O error occurs during payload processing
+     * @param index chunk index in region
+     * @param location {@link Location} in region file
+     * @param timestamp chunk timestamp
+     * @param payload byte array representing chunk payload
+     * @throws IOException if payload processing fails
      */
     public Chunk(int index, Location location, int timestamp, byte[] payload) throws IOException
     {
@@ -44,7 +43,6 @@ public class Chunk implements IChunk
         this.timestamp = timestamp;
         this.payload = new ChunkPayload(payload);
 
-        // Parse coordinates and data version from NBT data
         if (this.payload.getLength() > 0)
         {
             CoordinateData coordData = parseCoordinatesAndVersion();
@@ -60,7 +58,7 @@ public class Chunk implements IChunk
     }
 
     /**
-     * Parses coordinates and data version from NBT without caching the full NBT data.
+     * Parses coordinates and data version from NBT without caching.
      */
     private CoordinateData parseCoordinatesAndVersion() throws IOException
     {
@@ -71,7 +69,6 @@ public class Chunk implements IChunk
 
             int x, z, dataVersion;
 
-            // Check for entity file format (Position tag)
             if (root.hasTag("Position"))
             {
                 int[] coords = root.getIntArray("Position");
@@ -84,7 +81,6 @@ public class Chunk implements IChunk
                     throw new IOException("Invalid entity file format: Position array too short");
                 }
             }
-            // Check for POI file format (pos tag)
             else if (root.hasTag("pos"))
             {
                 int[] coords = root.getIntArray("pos");
@@ -98,7 +94,6 @@ public class Chunk implements IChunk
                 }
             } else
             {
-                // Standard region file format
                 if (root.hasTag("xPos") && root.hasTag("zPos"))
                 {
                     x = root.getInt("xPos");
@@ -109,7 +104,6 @@ public class Chunk implements IChunk
                 }
             }
 
-            // Get data version
             if (root.hasTag("DataVersion"))
             {
                 dataVersion = root.getInt("DataVersion");
@@ -125,8 +119,8 @@ public class Chunk implements IChunk
     /**
      * Sets new chunk data from raw NBT bytes.
      *
-     * @param payload the new chunk data as NBT bytes
-     * @throws IOException if an error occurs processing the payload
+     * @param payload new chunk data as NBT bytes
+     * @throws IOException if processing payload fails
      */
     private void setChunkData(byte[] payload) throws IOException
     {
@@ -134,11 +128,10 @@ public class Chunk implements IChunk
     }
 
     /**
-     * Gets the NBT root compound tag for this chunk with lazy loading.
-     * NBT data is only decompressed and parsed when first accessed.
+     * Gets NBT root compound tag with lazy loading.
      *
-     * @return the root compound tag containing chunk data
-     * @throws IOException if an error occurs reading the chunk data
+     * @return {@link ICompoundTag} containing chunk data or null if empty
+     * @throws IOException if reading chunk data fails
      */
     public ICompoundTag getNBTData() throws IOException
     {
@@ -156,10 +149,10 @@ public class Chunk implements IChunk
     }
 
     /**
-     * Sets new chunk data from an NBT compound tag.
+     * Sets new chunk data from NBT compound tag.
      *
-     * @param nbtData the NBT compound tag containing chunk data
-     * @throws IOException if an error occurs writing the NBT data
+     * @param nbtData {@link ICompoundTag} containing chunk data
+     * @throws IOException if writing NBT data fails
      */
     public void setNBTData(ICompoundTag nbtData) throws IOException
     {
@@ -172,13 +165,12 @@ public class Chunk implements IChunk
         byte[] nbtBytes = byteOutput.toByteArray();
         setChunkData(nbtBytes);
 
-        // Update cached data
         cachedNBTData = nbtData;
         nbtLoaded = true;
     }
 
     /**
-     * Loads and caches the NBT data.
+     * Loads and caches NBT data.
      */
     private void loadNBTData() throws IOException
     {
@@ -191,9 +183,9 @@ public class Chunk implements IChunk
     }
 
     /**
-     * Checks if NBT data has been loaded into memory.
+     * Checks if NBT data is loaded into memory.
      *
-     * @return true if NBT data is currently loaded
+     * @return true if NBT data loaded
      */
     public boolean isNBTLoaded()
     {
@@ -201,9 +193,9 @@ public class Chunk implements IChunk
     }
 
     /**
-     * Gets the location of the chunk.
+     * Gets chunk location.
      *
-     * @return the location of the chunk
+     * @return {@link Location} of chunk
      */
     public Location getLocation()
     {
@@ -211,9 +203,9 @@ public class Chunk implements IChunk
     }
 
     /**
-     * Gets the timestamp of the chunk.
+     * Gets chunk timestamp.
      *
-     * @return the timestamp of the chunk
+     * @return timestamp
      */
     public int getTimestamp()
     {
@@ -221,9 +213,9 @@ public class Chunk implements IChunk
     }
 
     /**
-     * Gets the payload of the chunk.
+     * Gets chunk payload.
      *
-     * @return the payload of the chunk
+     * @return {@link ChunkPayload}
      */
     public ChunkPayload getPayload()
     {
@@ -231,9 +223,9 @@ public class Chunk implements IChunk
     }
 
     /**
-     * Gets the x-coordinate of the chunk.
+     * Gets chunk x-coordinate.
      *
-     * @return the x-coordinate of the chunk
+     * @return x-coordinate
      */
     public int getX()
     {
@@ -241,9 +233,9 @@ public class Chunk implements IChunk
     }
 
     /**
-     * Gets the z-coordinate of the chunk.
+     * Gets chunk z-coordinate.
      *
-     * @return the z-coordinate of the chunk
+     * @return z-coordinate
      */
     public int getZ()
     {
@@ -251,9 +243,9 @@ public class Chunk implements IChunk
     }
 
     /**
-     * Gets the data version of the chunk.
+     * Gets data version of the chunk.
      *
-     * @return the data version of the chunk
+     * @return data version
      */
     public int getDataVersion()
     {
@@ -261,9 +253,9 @@ public class Chunk implements IChunk
     }
 
     /**
-     * Gets the index of the chunk.
+     * Gets chunk index.
      *
-     * @return the index of the chunk
+     * @return chunk index
      */
     public int getIndex()
     {
@@ -271,11 +263,10 @@ public class Chunk implements IChunk
     }
 
     /**
-     * Checks if this chunk contains entities with ownership information.
-     * This is useful for UUID conversion in MinecraftOfflineOnlineConverter.
+     * Checks if chunk contains entities with Owner or Target tags.
      *
-     * @return true if the chunk contains entities with Owner or Target tags
-     * @throws IOException if an error occurs reading the chunk data
+     * @return true if chunk contains ownable entities
+     * @throws IOException if reading chunk data fails
      */
     public boolean hasOwnableEntities() throws IOException
     {
@@ -290,19 +281,16 @@ public class Chunk implements IChunk
             return false;
         }
 
-        // Check for Owner tag (tamed animals, etc.)
         boolean hasOwner = root.hasTag("Owner");
-
-        // Check for Target tag (hostile mobs with targets)
         boolean hasTarget = root.hasTag("Target");
 
         return hasOwner || hasTarget;
     }
 
     /**
-     * Converts the chunk coordinates to region coordinates.
+     * Converts chunk coordinates to region coordinates.
      *
-     * @return an array containing the region x and z coordinates
+     * @return [regionX, regionZ] coordinates
      */
     @Override
     public int[] chunkToRegionCoordinate()
@@ -311,11 +299,11 @@ public class Chunk implements IChunk
     }
 
     /**
-     * Checks if the given block coordinates fall within this chunk.
+     * Checks if block coordinates fall within this chunk.
      *
-     * @param blockX the block x-coordinate
-     * @param blockZ the block z-coordinate
-     * @return true if the block is in this chunk
+     * @param blockX block x-coordinate
+     * @param blockZ block z-coordinate
+     * @return true if block is in chunk
      */
     @Override
     public boolean isBlockInChunk(int blockX, int blockZ)
@@ -326,9 +314,9 @@ public class Chunk implements IChunk
     }
 
     /**
-     * Gets the starting block coordinates of the chunk.
+     * Gets starting block coordinates of chunk.
      *
-     * @return an array containing the x and z starting block coordinates
+     * @return [startX, startZ] block coordinates
      */
     @Override
     public int[] getStartingBlockCoordinates()
@@ -362,9 +350,9 @@ public class Chunk implements IChunk
     }
 
     /**
-     * Returns a string representation of the Chunk object.
+     * Returns string representation of Chunk.
      *
-     * @return a string representation of the Chunk object
+     * @return string representation
      */
     @Override
     public String toString()
@@ -377,7 +365,7 @@ public class Chunk implements IChunk
     }
 
     /**
-     * Simple data class to hold coordinate and version data.
+     * Data class holding coordinate and version data.
      */
     private record CoordinateData(int x, int z, int dataVersion)
     {

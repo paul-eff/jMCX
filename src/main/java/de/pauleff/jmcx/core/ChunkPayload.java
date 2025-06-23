@@ -17,26 +17,26 @@ import java.util.zip.InflaterInputStream;
 import static de.pauleff.jmcx.util.AnvilConstants.MAX_CHUNK_SIZE_BYTES;
 
 /**
- * The ChunkPayload class represents the actual chunk's data.
- * According to the Minecraft Wiki, chunks are always less than 1MiB (1,048,576 bytes).
+ * Represents chunk data with compression handling.
+ *
+ * @author Paul Ferlitz
  */
 public class ChunkPayload
 {
     private final byte compressionType;
     private int payloadLength;
     private int length;
-    private byte[] data;
+    private byte[] compressedData;
 
     /**
-     * Constructs a ChunkPayload object from a byte array.
+     * Constructs a ChunkPayload from byte array.
      *
-     * @param payload the byte array representing the chunk payload
-     * @throws IOException            if an I/O error occurs during decompression
-     * @throws ChunkTooLargeException if the payload exceeds the maximum chunk size
+     * @param payload byte array representing chunk payload
+     * @throws IOException if I/O error occurs during decompression
+     * @throws ChunkTooLargeException if payload exceeds maximum chunk size
      */
     public ChunkPayload(byte[] payload) throws IOException
     {
-        // Validate payload size
         if (payload.length > MAX_CHUNK_SIZE_BYTES)
         {
             throw new ChunkTooLargeException(
@@ -49,14 +49,12 @@ public class ChunkPayload
         if (this.payloadLength == 0)
         {
             this.length = 0;
-            // Compression type uncompressed used when chunk was not written yet
             this.compressionType = 3;
-            this.data = new byte[0];
+            this.compressedData = new byte[0];
         } else
         {
             this.length = AnvilUtils.readInt(Arrays.copyOfRange(payload, 0, 4), ByteOrder.BIG_ENDIAN);
 
-            // Validate length field doesn't exceed remaining payload
             if (this.length < 0 || this.length > payload.length - 5)
             {
                 throw new IOException(
@@ -66,13 +64,12 @@ public class ChunkPayload
             }
 
             this.compressionType = payload[4];
-            this.data = Arrays.copyOfRange(payload, 5, 5 + this.length);
+            this.compressedData = Arrays.copyOfRange(payload, 5, 5 + this.length);
         }
     }
 
     protected void compressAndSetData(byte[] data) throws IOException
     {
-        // Validate input data size before compression
         if (data.length > MAX_CHUNK_SIZE_BYTES)
         {
             throw new ChunkTooLargeException(
@@ -83,7 +80,6 @@ public class ChunkPayload
 
         byte[] buffer = compressData(data, getCompressionType());
 
-        // Validate total payload size (compressed data + 4 bytes length + 1 byte compression type)
         int totalPayloadSize = buffer.length + 4 + 1;
         if (totalPayloadSize > MAX_CHUNK_SIZE_BYTES)
         {
@@ -93,32 +89,30 @@ public class ChunkPayload
             );
         }
 
-        this.data = buffer;
+        this.compressedData = buffer;
         setLength(buffer.length);
-        // Calculate payload length using sector alignment
-        int totalSize = buffer.length + 4 + 1; // data + length field + compression type
+        int totalSize = buffer.length + 4 + 1;
         setPayloadLength(AnvilUtils.calculateSectorCount(totalSize) * AnvilUtils.SECTOR_SIZE);
     }
 
     /**
-     * Gets the full payload with proper sector alignment.
-     * The payload includes: 4-byte length + 1-byte compression type + data + padding to 4KiB boundary.
+     * Gets full payload with sector alignment.
      *
-     * @return the full padded payload
+     * @return full padded payload
      */
     public byte[] getFullPayload()
     {
         ByteBuffer buffer = ByteBuffer.allocate(5 + this.length).order(ByteOrder.BIG_ENDIAN);
         buffer.putInt(this.length);
         buffer.put(this.compressionType);
-        buffer.put(this.data);
+        buffer.put(this.compressedData);
         return AnvilUtils.padToSectorSize(buffer.array());
     }
 
     /**
-     * Gets the payload length.
+     * Gets payload length.
      *
-     * @return the payload length
+     * @return payload length
      */
     public int getPayloadLength()
     {
@@ -131,9 +125,9 @@ public class ChunkPayload
     }
 
     /**
-     * Gets the length of the chunk data.
+     * Gets length of chunk data.
      *
-     * @return the length of the chunk data
+     * @return length of chunk data
      */
     public int getLength()
     {
@@ -146,9 +140,9 @@ public class ChunkPayload
     }
 
     /**
-     * Gets the compression type of the chunk data.
+     * Gets compression type of chunk data.
      *
-     * @return the compression type
+     * @return compression type
      */
     public byte getCompressionType()
     {
@@ -156,19 +150,20 @@ public class ChunkPayload
     }
 
     /**
-     * Gets the (possibly compressed) chunk data.
+     * Gets (possibly compressed) chunk data.
      *
-     * @return the (possibly compressed) chunk data
+     * @return (possibly compressed) chunk data
      */
     public byte[] getData()
     {
-        return data;
+        return compressedData;
     }
 
     /**
-     * Gets the decompressed chunk data.
+     * Gets decompressed chunk data.
      *
-     * @return the decompressed chunk data
+     * @return decompressed chunk data
+     * @throws IOException if decompression fails
      */
     public byte[] getDecompressedData() throws IOException
     {
@@ -176,41 +171,28 @@ public class ChunkPayload
     }
 
     /**
-     * Decompresses chunk data using the specified compression type.
-     * <p>
-     * Compression types according to Minecraft Wiki:
-     * 1 = GZip (unused in practice)
-     * 2 = Zlib (standard compression)
-     * 3 = Uncompressed
-     * 4 = LZ4 (not yet implemented)
-     * 127 = Custom compression (not supported)
+     * Decompresses chunk data using specified compression type.
      *
-     * @param data            The compressed chunk data.
-     * @param compressionType The compression type.
-     * @return The decompressed data.
-     * @throws IOException If decompression fails.
+     * @param data compressed chunk data
+     * @param compressionType compression type (1=GZip, 2=Zlib, 3=Uncompressed)
+     * @return decompressed data
+     * @throws IOException if decompression fails
      */
     public byte[] decompressData(byte[] data, byte compressionType) throws IOException
     {
-        // TODO: Implement this as enum
         try (ByteArrayInputStream byteStream = new ByteArrayInputStream(data))
         {
             switch (compressionType)
             {
                 case 1:
-                    // GZip compression (unused in practice but supported for compatibility)
                     return new GZIPInputStream(byteStream).readAllBytes();
                 case 2:
-                    // Zlib compression (standard)
                     return new InflaterInputStream(byteStream).readAllBytes();
                 case 3:
-                    // Uncompressed
                     return data;
                 case 4:
-                    // LZ4 compression (not yet implemented)
                     throw new IOException("LZ4 compression (type 4) is not yet implemented");
                 case 127:
-                    // Custom compression (not supported)
                     throw new IOException("Custom compression (type 127) is not supported");
                 default:
                     throw new IOException("Unknown compression type: " + compressionType +
@@ -220,19 +202,12 @@ public class ChunkPayload
     }
 
     /**
-     * Compresses chunk data using the specified compression type.
-     * <p>
-     * Compression types according to Minecraft Wiki:
-     * 1 = GZip (unused in practice)
-     * 2 = Zlib (standard compression)
-     * 3 = Uncompressed
-     * 4 = LZ4 (not yet implemented)
-     * 127 = Custom compression (not supported)
+     * Compresses chunk data using specified compression type.
      *
-     * @param data            The uncompressed chunk data.
-     * @param compressionType The compression type.
-     * @return The compressed data.
-     * @throws IOException If compression fails.
+     * @param data uncompressed chunk data
+     * @param compressionType compression type (1=GZip, 2=Zlib, 3=Uncompressed)
+     * @return compressed data
+     * @throws IOException if compression fails
      */
     public byte[] compressData(byte[] data, byte compressionType) throws IOException
     {
@@ -242,27 +217,22 @@ public class ChunkPayload
             switch (compressionType)
             {
                 case 1:
-                    // GZip compression (unused in practice but supported for compatibility)
                     try (GZIPOutputStream gzipStream = new GZIPOutputStream(byteStream))
                     {
                         inputStream.transferTo(gzipStream);
                     }
                     break;
                 case 2:
-                    // Zlib compression (standard)
                     try (DeflaterOutputStream deflaterStream = new DeflaterOutputStream(byteStream))
                     {
                         inputStream.transferTo(deflaterStream);
                     }
                     break;
                 case 3:
-                    // Uncompressed
                     return data;
                 case 4:
-                    // LZ4 compression (not yet implemented)
                     throw new IOException("LZ4 compression (type 4) is not yet implemented");
                 case 127:
-                    // Custom compression (not supported)
                     throw new IOException("Custom compression (type 127) is not supported");
                 default:
                     throw new IOException("Unknown compression type: " + compressionType +
@@ -273,9 +243,9 @@ public class ChunkPayload
     }
 
     /**
-     * Returns a string representation of the ChunkPayload object.
+     * Returns string representation of ChunkPayload.
      *
-     * @return a string representation of the ChunkPayload object
+     * @return string representation
      */
     @Override
     public String toString()
@@ -284,7 +254,7 @@ public class ChunkPayload
                 "payloadLength=" + payloadLength +
                 ", length=" + length +
                 ", compressionType=" + compressionType +
-                ", chunkData (Bytes)=" + data.length +
+                ", chunkData (Bytes)=" + compressedData.length +
                 '}';
     }
 }

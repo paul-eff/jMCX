@@ -14,8 +14,7 @@ import java.util.Optional;
 import static de.pauleff.jmcx.util.AnvilConstants.*;
 
 /**
- * The Region class represents a region in the Anvil file format.
- * It handles reading chunk data from a region file.
+ * Implementation of {@link IRegion} representing a region in the Anvil file format.
  *
  * @author Paul Ferlitz
  */
@@ -33,10 +32,10 @@ public class Region implements IRegion
     /**
      * Constructs a Region object.
      *
-     * @param x         the x-coordinate of the region
-     * @param z         the z-coordinate of the region
-     * @param anvilFile the RandomAccessFile for the target region file
-     * @throws IOException if an I/O error occurs
+     * @param x region x-coordinate
+     * @param z region z-coordinate
+     * @param anvilFile RandomAccessFile for target region file
+     * @throws IOException if I/O error occurs
      */
     public Region(int x, int z, RandomAccessFile anvilFile) throws IOException
     {
@@ -47,13 +46,12 @@ public class Region implements IRegion
     }
 
     /**
-     * Constructs a Region object from a list of chunks.
-     * Used by RegionBuilder for creating regions programmatically.
+     * Constructs a Region object from chunk list.
      *
-     * @param x      the x-coordinate of the region
-     * @param z      the z-coordinate of the region
-     * @param chunks the list of chunks (must contain exactly CHUNKS_PER_REGION chunks)
-     * @throws IllegalArgumentException if chunks list size is not CHUNKS_PER_REGION
+     * @param x region x-coordinate
+     * @param z region z-coordinate
+     * @param chunks list of {@link IChunk} (must contain exactly CHUNKS_PER_REGION chunks)
+     * @throws IllegalArgumentException if chunks list size not CHUNKS_PER_REGION
      */
     public Region(int x, int z, List<IChunk> chunks)
     {
@@ -64,10 +62,9 @@ public class Region implements IRegion
 
         this.x = x;
         this.z = z;
-        this.raf = null; // No file backing this region
+        this.raf = null;
         this.chunks = new ArrayList<>(CHUNKS_PER_REGION);
 
-        // Convert IChunk to Chunk instances
         for (IChunk chunk : chunks)
         {
             if (!(chunk instanceof Chunk))
@@ -86,10 +83,8 @@ public class Region implements IRegion
             throw new IllegalArgumentException("Chunk must be an instance of de.pauleff.jmcx.core.Chunk");
         }
 
-        // Calculate the correct region-local index for the chunk coordinates
         int targetIndex = AnvilUtils.chunkCoordinatesToIndex(concreteChunk.getX(), concreteChunk.getZ());
 
-        // Validate that the chunk belongs to this region
         if (!containsChunk(concreteChunk.getX(), concreteChunk.getZ()))
         {
             throw new IllegalArgumentException(
@@ -100,9 +95,9 @@ public class Region implements IRegion
     }
 
     /**
-     * Gets the x-coordinate of the region.
+     * Gets region x-coordinate.
      *
-     * @return the x-coordinate
+     * @return x-coordinate
      */
     public int getX()
     {
@@ -110,9 +105,9 @@ public class Region implements IRegion
     }
 
     /**
-     * Gets the z-coordinate of the region.
+     * Gets region z-coordinate.
      *
-     * @return the z-coordinate
+     * @return z-coordinate
      */
     public int getZ()
     {
@@ -120,10 +115,9 @@ public class Region implements IRegion
     }
 
     /**
-     * Gets the list of all CHUNKS_PER_REGION chunks in the region.
-     * If a chunk was not generated yet all its values will be 0 or null.
+     * Gets list of all chunks in region.
      *
-     * @return the list of chunks
+     * @return list of {@link IChunk} objects
      */
     @Override
     public List<IChunk> getChunks()
@@ -132,10 +126,10 @@ public class Region implements IRegion
     }
 
     /**
-     * Reads all chunks from the region file.
+     * Reads all chunks from region file.
      *
-     * @return the list of chunks
-     * @throws IOException if an I/O error occurs
+     * @return list of chunks
+     * @throws IOException if I/O error occurs
      */
     private ArrayList<Chunk> readAllChunks() throws IOException
     {
@@ -147,30 +141,25 @@ public class Region implements IRegion
 
         for (int i = 0; i < locationCount; i++)
         {
-            // Read and save location
             raf.seek(i * LOCATION_SIZE);
             byte[] byteBuffer = new byte[4];
             raf.read(byteBuffer);
             locations[i] = new Location(byteBuffer);
-            // Read and save the timestamp for the location
             raf.seek(SECTOR_SIZE_BYTES + i * TIMESTAMP_SIZE);
             byteBuffer = new byte[4];
             raf.read(byteBuffer);
             timestamps[i] = AnvilUtils.readInt(byteBuffer, ByteOrder.BIG_ENDIAN);
         }
 
-        // Iterate over all locations and read their chunks
         ArrayList<Chunk> chunks = new ArrayList<>();
         for (int i = 0; i < locationCount; i++)
         {
             Location currLocation = locations[i];
             if (currLocation.getOffset() == 0 && currLocation.getSectorCount() == 0)
             {
-                // Empty chunk - create with empty payload
                 chunks.add(new Chunk(i, locations[i], timestamps[i], new byte[0]));
             } else
             {
-                // Read chunk data from file
                 raf.seek(currLocation.getOffset() * (long) SECTOR_SIZE_BYTES);
                 byte[] chunkData = new byte[currLocation.getSectorCount() * SECTOR_SIZE_BYTES];
                 raf.read(chunkData);
@@ -183,7 +172,6 @@ public class Region implements IRegion
     @Override
     public Optional<IChunk> getChunk(int chunkX, int chunkZ)
     {
-        // First check if the requested coordinates are within this region
         if (!containsChunk(chunkX, chunkZ))
         {
             return Optional.empty();
@@ -195,20 +183,17 @@ public class Region implements IRegion
             Chunk chunk = chunks.get(index);
             if (chunk != null && !chunk.isEmpty())
             {
-                // For non-empty chunks, verify coordinates match
                 if (chunk.getX() == chunkX && chunk.getZ() == chunkZ)
                 {
                     return Optional.of(chunk);
                 } else
                 {
-                    // Coordinates mismatch - this indicates a bug in chunk placement
                     System.err.printf("WARNING: Retrieved chunk position [%d, %d] does not match requested [%d, %d] at index %d%n",
                             chunk.getX(), chunk.getZ(), chunkX, chunkZ, index);
                     return Optional.empty();
                 }
             } else if (chunk != null)
             {
-                // Empty chunk at correct index - return it
                 return Optional.of(chunk);
             }
         }
@@ -243,7 +228,6 @@ public class Region implements IRegion
     @Override
     public boolean containsChunk(int chunkX, int chunkZ)
     {
-        // Check if chunk coordinates fall within this region's bounds
         int regionStartX = this.x * CHUNKS_PER_REGION_SIDE;
         int regionEndX = regionStartX + CHUNKS_PER_REGION_SIDE - 1;
         int regionStartZ = this.z * CHUNKS_PER_REGION_SIDE;

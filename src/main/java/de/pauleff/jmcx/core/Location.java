@@ -6,7 +6,9 @@ import java.nio.ByteOrder;
 import java.util.Arrays;
 
 /**
- * The Location class represents information to locate a chunk's data in an Anvil file.
+ * Represents location information to locate chunk data in Anvil file.
+ *
+ * @author Paul Ferlitz
  */
 public class Location
 {
@@ -14,10 +16,10 @@ public class Location
     private int sectorCount;
 
     /**
-     * Constructs a Location object from a byte array.
+     * Constructs a Location from byte array.
      *
-     * @param locationBytes the byte array representing the location
-     * @throws IllegalArgumentException if the byte array length is not 4
+     * @param locationBytes byte array representing location (must be 4 bytes)
+     * @throws IllegalArgumentException if byte array length not 4
      */
     public Location(byte[] locationBytes)
     {
@@ -35,9 +37,9 @@ public class Location
     }
 
     /**
-     * Gets the offset of the location.
+     * Gets offset of location.
      *
-     * @return the offset
+     * @return offset
      */
     public int getOffset()
     {
@@ -50,9 +52,9 @@ public class Location
     }
 
     /**
-     * Gets the sector count of the location.
+     * Gets sector count of location.
      *
-     * @return the sector count
+     * @return sector count
      */
     public int getSectorCount()
     {
@@ -65,9 +67,9 @@ public class Location
     }
 
     /**
-     * Returns a string representation of the Location object.
+     * Returns string representation of Location.
      *
-     * @return a string representation of the Location object
+     * @return string representation
      */
     @Override
     public String toString()
