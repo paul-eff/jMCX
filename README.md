@@ -88,7 +88,7 @@ for (Chunk chunk : ownableChunks) {
 - Enhanced editing operations
 - LZ4 compression support
 - Bedrock Region format support
-- Alpha Level format support
+- McRegion (Alpha) Level format support
 - Graphical interface (maybe!)
 
 ## 📖 Documentation
