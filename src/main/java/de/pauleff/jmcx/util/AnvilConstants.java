@@ -6,10 +6,6 @@ package de.pauleff.jmcx.util;
  */
 public final class AnvilConstants
 {
-
-    // File format constants
-    public static final String MCA_EXTENSION = ".mca";
-
     // Size constants (in bytes)
     public static final int SECTOR_SIZE_BYTES = 4096;
     public static final int MAX_CHUNK_SIZE_BYTES = 1048576; // 1MiB

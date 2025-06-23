@@ -1,6 +1,7 @@
 package de.pauleff.jmcx.util;
 
 import de.pauleff.jmcx.core.Location;
+import de.pauleff.jmcx.formats.FileFormat;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -159,7 +160,7 @@ public class AnvilUtils
      */
     public static String generateRegionFilename(int regionX, int regionZ)
     {
-        return "r." + regionX + "." + regionZ + MCA_EXTENSION;
+        return "r." + regionX + "." + regionZ + "." + FileFormat.ANVIL.getExtension();
     }
 
     /**
@@ -177,7 +178,7 @@ public class AnvilUtils
         }
 
         String[] parts = filename.split("\\.");
-        if (parts.length != 4 || !"r".equals(parts[0]) || !MCA_EXTENSION.substring(1).equals(parts[3]))
+        if (parts.length != 4 || !"r".equals(parts[0]) || !FileFormat.ANVIL.getExtension().equals(parts[3]))
         {
             throw new IllegalArgumentException(
                     "Invalid region filename format. Expected: r.x.z.mca, got: " + filename

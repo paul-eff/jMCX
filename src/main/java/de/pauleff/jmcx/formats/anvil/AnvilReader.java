@@ -7,6 +7,7 @@ import de.pauleff.jmcx.core.Chunk;
 import de.pauleff.jmcx.core.Location;
 import de.pauleff.jmcx.core.Region;
 import de.pauleff.jmcx.exceptions.ChunkTooLargeException;
+import de.pauleff.jmcx.formats.FileFormat;
 import de.pauleff.jmcx.util.AnvilUtils;
 
 import java.io.File;
@@ -595,7 +596,7 @@ public class AnvilReader implements IAnvilReader
     private void validateFileFormat(File file) throws IllegalArgumentException
     {
         String filename = file.getName().toLowerCase();
-        if (!filename.endsWith(MCA_EXTENSION))
+        if (!filename.endsWith(FileFormat.ANVIL.getExtension()))
         {
             throw new IllegalArgumentException(
                     "Unsupported file format. Currently only .mca (Anvil) files are supported, got: " + filename
@@ -612,7 +613,7 @@ public class AnvilReader implements IAnvilReader
     public String getFileFormat()
     {
         String filename = anvilFile.getName().toLowerCase();
-        return filename.endsWith(MCA_EXTENSION) ? "mca" : "unknown";
+        return filename.endsWith(FileFormat.ANVIL.getExtension()) ? "mca" : "unknown";
     }
 
     /**

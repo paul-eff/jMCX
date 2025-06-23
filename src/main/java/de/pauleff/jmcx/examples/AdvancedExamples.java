@@ -4,6 +4,7 @@ import de.pauleff.jmcx.api.AnvilFactory;
 import de.pauleff.jmcx.api.IAnvilReader;
 import de.pauleff.jmcx.api.IChunk;
 import de.pauleff.jmcx.api.IRegion;
+import de.pauleff.jmcx.formats.FileFormat;
 import de.pauleff.jmcx.util.ChunkFilter;
 
 import java.io.File;
@@ -13,8 +14,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Stream;
-
-import static de.pauleff.jmcx.util.AnvilConstants.MCA_EXTENSION;
 
 /**
  * Advanced examples for processing multiple files and complex operations.
@@ -42,7 +41,7 @@ public class AdvancedExamples
         // Process all MCA files
         try (Stream<Path> files = Files.walk(worldRegionDir))
         {
-            List<File> mcaFiles = files.filter(path -> path.toString().endsWith(MCA_EXTENSION))
+            List<File> mcaFiles = files.filter(path -> path.toString().endsWith(FileFormat.ANVIL.getExtension()))
                     .map(Path::toFile)
                     .toList();
 
@@ -91,7 +90,7 @@ public class AdvancedExamples
 
         try (Stream<Path> files = Files.walk(worldRegionDir))
         {
-            List<File> mcaFiles = files.filter(path -> path.toString().endsWith(MCA_EXTENSION))
+            List<File> mcaFiles = files.filter(path -> path.toString().endsWith(FileFormat.ANVIL.getExtension()))
                     .map(Path::toFile)
                     .toList();
 
