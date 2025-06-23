@@ -4,6 +4,7 @@ import de.pauleff.jmcx.api.IChunk;
 import de.pauleff.jmcx.core.Chunk;
 import de.pauleff.jmcx.core.ChunkPayload;
 import de.pauleff.jmcx.core.Location;
+import de.pauleff.jmcx.util.AnvilUtils;
 import de.pauleff.jnbt.api.ICompoundTag;
 import de.pauleff.jnbt.formats.binary.NBTWriter;
 
@@ -35,7 +36,7 @@ public class ChunkBuilder
 
     private ChunkBuilder()
     {
-        this.timestamp = (int) (System.currentTimeMillis() / 1000); // Current Unix timestamp
+        this.timestamp = (int) (System.currentTimeMillis() / 1000);
     }
 
     /**
@@ -284,30 +285,30 @@ public class ChunkBuilder
         validateBuilder();
 
         // Calculate index if not set - use region-local coordinates
-        if (index == -1)
+        if (this.index == -1)
         {
-            index = de.pauleff.jmcx.util.AnvilUtils.chunkCoordinatesToIndex(chunkX, chunkZ);
+            this.index = AnvilUtils.chunkCoordinatesToIndex(this.chunkX, this.chunkZ);
         }
 
         // Validate that the calculated index is consistent with coordinates
-        int expectedIndex = de.pauleff.jmcx.util.AnvilUtils.chunkCoordinatesToIndex(chunkX, chunkZ);
-        if (index != expectedIndex)
+        int expectedIndex = AnvilUtils.chunkCoordinatesToIndex(this.chunkX, this.chunkZ);
+        if (this.index != expectedIndex)
         {
             // Update index to match coordinates to ensure consistency
-            index = expectedIndex;
+            this.index = expectedIndex;
         }
 
         // Create location if not set
-        if (location == null)
+        if (this.location == null)
         {
-            location = Location.createEmptyLocation();
+            this.location = Location.createEmptyLocation();
         }
 
         // Create minimal NBT data if not provided
-        if (nbtData == null)
+        if (this.nbtData == null)
         {
             // Create chunk with empty payload
-            Chunk chunk = new Chunk(index, location, timestamp, new byte[0]);
+            Chunk chunk = new Chunk(this.index, this.location, this.timestamp, new byte[0]);
             return chunk;
         } else
         {
@@ -318,11 +319,11 @@ public class ChunkBuilder
             byte[] nbtPayload = createNBTPayload();
 
             // Calculate sector count needed for the payload and update location
-            int sectorCount = de.pauleff.jmcx.util.AnvilUtils.calculateSectorCount(nbtPayload.length);
-            location = de.pauleff.jmcx.util.AnvilUtils.createLocation(0, sectorCount); // offset will be set by region when writing
+            int sectorCount = AnvilUtils.calculateSectorCount(nbtPayload.length);
+            this.location = AnvilUtils.createLocation(0, sectorCount); // offset will be set by region when writing
 
             // Create chunk with NBT payload so constructor can read coordinates
-            Chunk chunk = new Chunk(index, location, timestamp, nbtPayload);
+            Chunk chunk = new Chunk(this.index, this.location, this.timestamp, nbtPayload);
             return chunk;
         }
     }
