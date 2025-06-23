@@ -119,11 +119,6 @@ public class AnvilReader implements IAnvilReader
         }
     }
 
-    @Override
-    public boolean isValidFormat()
-    {
-        return "mca".equals(getFileFormat());
-    }
 
     @Override
     public int[] getRegionCoordinates()
@@ -612,13 +607,13 @@ public class AnvilReader implements IAnvilReader
     @Override
     public String getFileFormat()
     {
-        String filename = anvilFile.getName().toLowerCase();
-        return filename.endsWith(FileFormat.ANVIL.getExtension()) ? "mca" : "unknown";
+        // Format already validated in constructor, so we know it's mca
+        return "mca";
     }
 
     /**
      * Parses the filename to extract the region coordinates.
-     * Supports .mca filename format (r.x.z.mca).
+     * Delegates to AnvilUtils for consistent parsing logic.
      *
      * @param filename the filename of the region file
      * @return an array containing the x and z coordinates of the region
@@ -626,24 +621,6 @@ public class AnvilReader implements IAnvilReader
      */
     private int[] parseFilenameToCoordinates(String filename) throws IllegalArgumentException
     {
-        String[] parts = filename.split("\\.");
-        if (parts.length < 4 || !"r".equals(parts[0]))
-        {
-            throw new IllegalArgumentException(
-                    "Invalid region filename format. Expected: r.x.z.mca, got: " + filename
-            );
-        }
-
-        try
-        {
-            int x = Integer.parseInt(parts[1]);
-            int z = Integer.parseInt(parts[2]);
-            return new int[]{x, z};
-        } catch (NumberFormatException e)
-        {
-            throw new IllegalArgumentException(
-                    "Invalid coordinates in filename: " + filename + ". Coordinates must be integers.", e
-            );
-        }
+        return AnvilUtils.parseRegionFilename(filename);
     }
 }

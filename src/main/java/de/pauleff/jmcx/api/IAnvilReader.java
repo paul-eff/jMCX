@@ -37,12 +37,6 @@ public interface IAnvilReader extends AutoCloseable
      */
     String getFileFormat();
 
-    /**
-     * Checks if the file has a valid Anvil format.
-     *
-     * @return true if file format is valid
-     */
-    boolean isValidFormat();
 
     /**
      * Gets the region coordinates extracted from the filename.
