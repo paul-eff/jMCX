@@ -9,26 +9,22 @@ import java.io.IOException;
 
 /**
  * Factory class for creating Anvil file readers and writers.
- * Provides convenient factory methods with automatic format detection and validation.
  *
  * @author Paul Ferlitz
- * @since 0.2
  */
 public final class AnvilFactory
 {
-    // Private constructor to prevent instantiation
     private AnvilFactory()
     {
     }
 
     /**
      * Creates a reader for the specified file.
-     * Automatically detects and validates the file format.
      *
-     * @param file the .mca file to read
-     * @return a new reader instance
-     * @throws IOException              if file access fails
-     * @throws IllegalArgumentException if file format is unsupported
+     * @param file .mca file to read
+     * @return new {@link IAnvilReader} instance
+     * @throws IOException if file access fails
+     * @throws IllegalArgumentException if file format unsupported
      */
     public static IAnvilReader createReader(File file) throws IOException
     {
@@ -48,10 +44,10 @@ public final class AnvilFactory
     /**
      * Creates a reader for the specified file path.
      *
-     * @param filePath the path to the .mca file
-     * @return a new reader instance
-     * @throws IOException              if file access fails
-     * @throws IllegalArgumentException if file format is unsupported
+     * @param filePath path to .mca file
+     * @return new {@link IAnvilReader} instance
+     * @throws IOException if file access fails
+     * @throws IllegalArgumentException if file format unsupported
      */
     public static IAnvilReader createReader(String filePath) throws IOException
     {
@@ -65,12 +61,11 @@ public final class AnvilFactory
 
     /**
      * Creates a writer for the specified file.
-     * Automatically validates the file format and path.
      *
-     * @param file the .mca file to write
-     * @return a new writer instance
-     * @throws IOException              if file access fails
-     * @throws IllegalArgumentException if file format is unsupported
+     * @param file .mca file to write
+     * @return new {@link IAnvilWriter} instance
+     * @throws IOException if file access fails
+     * @throws IllegalArgumentException if file format unsupported
      */
     public static IAnvilWriter createWriter(File file) throws IOException
     {
@@ -91,10 +86,10 @@ public final class AnvilFactory
     /**
      * Creates a writer for the specified file path.
      *
-     * @param filePath the path to the .mca file
-     * @return a new writer instance
-     * @throws IOException              if file access fails
-     * @throws IllegalArgumentException if file format is unsupported
+     * @param filePath path to .mca file
+     * @return new {@link IAnvilWriter} instance
+     * @throws IOException if file access fails
+     * @throws IllegalArgumentException if file format unsupported
      */
     public static IAnvilWriter createWriter(String filePath) throws IOException
     {
@@ -107,10 +102,10 @@ public final class AnvilFactory
     }
 
     /**
-     * Checks if the file is a valid Anvil file that can be processed.
+     * Checks if file is a valid Anvil file.
      *
-     * @param file the file to validate
-     * @return true if file is valid and supported
+     * @param file file to validate
+     * @return true if valid and supported
      */
     public static boolean isValidAnvilFile(File file)
     {
@@ -124,10 +119,10 @@ public final class AnvilFactory
     }
 
     /**
-     * Checks if the file path represents a valid Anvil file.
+     * Checks if file path represents a valid Anvil file.
      *
-     * @param filePath the file path to validate
-     * @return true if file is valid and supported
+     * @param filePath file path to validate
+     * @return true if valid and supported
      */
     public static boolean isValidAnvilFile(String filePath)
     {

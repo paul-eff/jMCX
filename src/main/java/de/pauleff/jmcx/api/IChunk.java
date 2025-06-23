@@ -6,59 +6,57 @@ import java.io.IOException;
 
 /**
  * Interface representing a single chunk within a Minecraft region.
- * Each chunk covers a 16x16 block area and contains block data, entities, and metadata.
  *
  * @author Paul Ferlitz
- * @since 0.2
  */
 public interface IChunk
 {
     /**
-     * Gets the x-coordinate of this chunk.
+     * Gets chunk x-coordinate.
      *
-     * @return the x-coordinate
+     * @return x-coordinate
      */
     int getX();
 
     /**
-     * Gets the z-coordinate of this chunk.
+     * Gets chunk z-coordinate.
      *
-     * @return the z-coordinate
+     * @return z-coordinate
      */
     int getZ();
 
     /**
-     * Gets the Minecraft data version of this chunk.
+     * Gets Minecraft data version of this chunk.
      *
-     * @return the data version
+     * @return data version
      */
     int getDataVersion();
 
     /**
-     * Gets the timestamp when this chunk was last modified (seconds since Unix epoch).
+     * Gets last modified timestamp (seconds since Unix epoch).
      *
-     * @return the timestamp
+     * @return timestamp
      */
     int getTimestamp();
 
     /**
-     * Gets the {@link ICompoundTag} containing all chunk data, or null if empty.
+     * Gets NBT data containing all chunk data.
      *
-     * @return the NBT data or null if empty
+     * @return {@link ICompoundTag} or null if empty
      * @throws IOException if reading fails
      */
     ICompoundTag getNBTData() throws IOException;
 
     /**
-     * Sets new NBT data for this chunk using the given {@link ICompoundTag}.
+     * Sets new NBT data for this chunk.
      *
-     * @param nbtData the new NBT data
+     * @param nbtData new {@link ICompoundTag}
      * @throws IOException if writing fails
      */
     void setNBTData(ICompoundTag nbtData) throws IOException;
 
     /**
-     * Checks if this chunk contains entities with Owner or Target tags.
+     * Checks if chunk contains entities with Owner or Target tags.
      *
      * @return true if ownable entities exist
      * @throws IOException if reading fails
@@ -66,60 +64,60 @@ public interface IChunk
     boolean hasOwnableEntities() throws IOException;
 
     /**
-     * Checks if the given block coordinates fall within this chunk.
+     * Checks if block coordinates fall within this chunk.
      *
-     * @param blockX the block x-coordinate
-     * @param blockZ the block z-coordinate
-     * @return true if block is in this chunk
+     * @param blockX block x-coordinate
+     * @param blockZ block z-coordinate
+     * @return true if block is in chunk
      */
     boolean isBlockInChunk(int blockX, int blockZ);
 
     /**
-     * Gets the block coordinate range [minX, minZ, maxX, maxZ] for this chunk.
+     * Gets block coordinate range for this chunk.
      *
-     * @return array of [minX, minZ, maxX, maxZ] coordinates
+     * @return [minX, minZ, maxX, maxZ] coordinates
      */
     int[] getBlockCoordinateRange();
 
     /**
-     * Gets the starting block coordinates [startX, startZ] of this chunk.
+     * Gets starting block coordinates of this chunk.
      *
-     * @return array of [startX, startZ] coordinates
+     * @return [startX, startZ] coordinates
      */
     int[] getStartingBlockCoordinates();
 
     /**
-     * Converts this chunk's coordinates to region coordinates [regionX, regionZ].
+     * Converts chunk coordinates to region coordinates.
      *
-     * @return array of [regionX, regionZ] coordinates
+     * @return [regionX, regionZ] coordinates
      */
     int[] chunkToRegionCoordinate();
 
     /**
-     * Gets the index of this chunk within its region (0-1023).
+     * Gets chunk index within its region (0-1023).
      *
-     * @return the chunk index
+     * @return chunk index
      */
     int getIndex();
 
     /**
-     * Checks if this chunk is empty or ungenerated.
+     * Checks if chunk is empty or ungenerated.
      *
-     * @return true if chunk is empty
+     * @return true if empty
      */
     boolean isEmpty();
 
     /**
-     * Gets the size of the compressed chunk data in bytes.
+     * Gets compressed chunk data size in bytes.
      *
-     * @return the data size in bytes
+     * @return data size
      */
     int getDataSize();
 
     /**
-     * Checks if NBT data has been loaded into memory (for lazy loading implementations).
+     * Checks if NBT data is loaded into memory.
      *
-     * @return true if NBT data is currently loaded
+     * @return true if NBT data loaded
      */
     boolean isNBTLoaded();
 }

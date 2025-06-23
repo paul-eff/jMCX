@@ -6,87 +6,85 @@ import java.util.Optional;
 
 /**
  * Interface representing a Minecraft region containing a 32x32 grid of chunks.
- * Each region corresponds to a single .mca file and contains up to CHUNKS_PER_REGION chunks.
  *
  * @author Paul Ferlitz
- * @since 0.2
  */
 public interface IRegion
 {
     /**
-     * Gets the x-coordinate of this region.
+     * Gets region x-coordinate.
      *
-     * @return the x-coordinate
+     * @return x-coordinate
      */
     int getX();
 
     /**
-     * Gets the z-coordinate of this region.
+     * Gets region z-coordinate.
      *
-     * @return the z-coordinate
+     * @return z-coordinate
      */
     int getZ();
 
     /**
-     * Gets all CHUNKS_PER_REGION chunks in this region, including empty chunks.
+     * Gets all chunks in region including empty chunks.
      *
-     * @return list of all chunks
+     * @return list of all {@link IChunk} objects
      */
     List<IChunk> getChunks();
 
     /**
-     * Gets a specific chunk by coordinates.
+     * Gets chunk by coordinates.
      *
-     * @param chunkX the chunk x-coordinate
-     * @param chunkZ the chunk z-coordinate
-     * @return the chunk if it exists, empty otherwise
+     * @param chunkX chunk x-coordinate
+     * @param chunkZ chunk z-coordinate
+     * @return {@link IChunk} if exists, empty otherwise
      */
     Optional<IChunk> getChunk(int chunkX, int chunkZ);
 
     /**
      * Gets chunks containing entities with Owner or Target tags.
      *
-     * @return list of chunks with ownable entities
-     * @throws IOException if reading chunk data fails
+     * @return list of {@link IChunk} objects with ownable entities
+     * @throws IOException if reading fails
      */
     List<IChunk> getChunksWithOwnables() throws IOException;
 
     /**
      * Replaces a chunk in this region.
      *
-     * @param chunk the new chunk
+     * @param chunk new {@link IChunk}
      * @throws IOException if replacement fails
      */
     void replaceChunk(IChunk chunk) throws IOException;
 
     /**
-     * Checks if this region contains a chunk at the given coordinates.
+     * Checks if region contains chunk at coordinates.
      *
-     * @param chunkX the chunk x-coordinate
-     * @param chunkZ the chunk z-coordinate
-     * @return true if chunk exists at coordinates
+     * @param chunkX chunk x-coordinate
+     * @param chunkZ chunk z-coordinate
+     * @return true if chunk exists
      */
     boolean containsChunk(int chunkX, int chunkZ);
 
     /**
-     * Gets the block coordinate range [minX, minZ, maxX, maxZ] for this region.
+     * Gets block coordinate range for this region.
      *
-     * @return array of [minX, minZ, maxX, maxZ] coordinates
+     * @return [minX, minZ, maxX, maxZ] coordinates
      */
     int[] getBlockCoordinateRange();
 
     /**
-     * Gets the starting block coordinates [startX, startZ] of this region.
+     * Gets starting block coordinates of this region.
      *
-     * @return array of [startX, startZ] coordinates
+     * @return [startX, startZ] coordinates
      */
     int[] getStartingBlockCoordinates();
 
     /**
-     * Checks if the given {@link IChunk} belongs to this region.
+     * Checks if chunk belongs to this region.
      *
-     * @param chunk the chunk to check
-     * @return true if chunk belongs to this region
+     * @param chunk {@link IChunk} to check
+     * @return true if chunk belongs to region
      */
     boolean chunkInRegion(IChunk chunk);
 }

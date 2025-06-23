@@ -5,70 +5,68 @@ import java.util.Optional;
 
 /**
  * Interface for reading Minecraft Anvil (.mca) region files.
- * Provides type-safe access to region and chunk data with automatic resource management.
  *
  * @author Paul Ferlitz
- * @since 0.2
  */
 public interface IAnvilReader extends AutoCloseable
 {
     /**
-     * Reads the entire region from the .mca file.
+     * Reads the entire region from the file.
      *
-     * @return the complete region with all chunks
+     * @return the {@link IRegion} with all chunks
      * @throws IOException if reading fails
      */
     IRegion readRegion() throws IOException;
 
     /**
-     * Reads a specific chunk from the region file.
+     * Reads a specific chunk from the region.
      *
-     * @param chunkX the chunk x-coordinate
-     * @param chunkZ the chunk z-coordinate
-     * @return the chunk if it exists, empty otherwise
+     * @param chunkX chunk x-coordinate
+     * @param chunkZ chunk z-coordinate
+     * @return {@link IChunk} if exists, empty otherwise
      * @throws IOException if reading fails
      */
     Optional<IChunk> readChunk(int chunkX, int chunkZ) throws IOException;
 
     /**
-     * Gets the file format of the region file.
+     * Gets the file format.
      *
-     * @return the file format (e.g., "mca")
+     * @return file format ("mca")
      */
     String getFileFormat();
 
 
     /**
-     * Gets the region coordinates extracted from the filename.
+     * Gets region coordinates from filename.
      *
-     * @return array of [regionX, regionZ] coordinates
+     * @return [regionX, regionZ] coordinates
      */
     int[] getRegionCoordinates();
 
     /**
-     * Gets the source file path of this reader.
+     * Gets source file path.
      *
-     * @return the file path as string
+     * @return file path
      */
     String getFilePath();
 
     /**
-     * Checks if the region file exists and is readable.
+     * Checks if file exists and is readable.
      *
-     * @return true if file exists and is readable
+     * @return true if readable
      */
     boolean canRead();
 
     /**
-     * Gets the file size in bytes.
+     * Gets file size in bytes.
      *
-     * @return the file size in bytes
-     * @throws IOException if file access fails
+     * @return file size
+     * @throws IOException if access fails
      */
     long getFileSize() throws IOException;
 
     /**
-     * Closes the reader and releases any system resources.
+     * Closes reader and releases resources.
      *
      * @throws IOException if closing fails
      */
