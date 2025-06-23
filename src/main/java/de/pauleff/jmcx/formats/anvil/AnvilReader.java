@@ -151,10 +151,9 @@ public class AnvilReader implements IAnvilReader
      * Gets file size in bytes.
      *
      * @return file size
-     * @throws IOException if I/O error occurs
      */
     @Override
-    public long getFileSize() throws IOException
+    public long getFileSize()
     {
         return anvilFile.length();
     }
@@ -187,14 +186,6 @@ public class AnvilReader implements IAnvilReader
             throw new IOException(
                     String.format("Invalid MCA file: file size %d bytes is less than required header size %d bytes",
                             fileSize, HEADER_SIZE)
-            );
-        }
-
-        if (HEADER_SIZE != 2 * SECTOR_SIZE_BYTES)
-        {
-            throw new IOException(
-                    String.format("Invalid header size: expected %d bytes (2 sectors), got %d bytes",
-                            2 * SECTOR_SIZE_BYTES, HEADER_SIZE)
             );
         }
 

@@ -199,22 +199,16 @@ public class ChunkPayload
     {
         try (ByteArrayInputStream byteStream = new ByteArrayInputStream(data))
         {
-            switch (compressionType)
+            return switch (compressionType)
             {
-                case 1:
-                    return new GZIPInputStream(byteStream).readAllBytes();
-                case 2:
-                    return new InflaterInputStream(byteStream).readAllBytes();
-                case 3:
-                    return data;
-                case 4:
-                    throw new IOException("LZ4 compression (type 4) is not yet implemented");
-                case 127:
-                    throw new IOException("Custom compression (type 127) is not supported");
-                default:
-                    throw new IOException("Unknown compression type: " + compressionType +
-                            ". Supported types: 1 (GZip), 2 (Zlib), 3 (Uncompressed)");
-            }
+                case 1 -> new GZIPInputStream(byteStream).readAllBytes();
+                case 2 -> new InflaterInputStream(byteStream).readAllBytes();
+                case 3 -> data;
+                case 4 -> throw new IOException("LZ4 compression (type 4) is not yet implemented");
+                case 127 -> throw new IOException("Custom compression (type 127) is not supported");
+                default -> throw new IOException("Unknown compression type: " + compressionType +
+                        ". Supported types: 1 (GZip), 2 (Zlib), 3 (Uncompressed)");
+            };
         }
     }
 

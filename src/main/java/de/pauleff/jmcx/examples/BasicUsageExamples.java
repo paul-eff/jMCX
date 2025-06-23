@@ -38,10 +38,7 @@ public class BasicUsageExamples
                 
                 // Get a specific chunk
                 Optional<IChunk> chunk = region.getChunk(0, 0);
-                if (chunk.isPresent())
-                {
-                    System.out.println("Chunk (0,0) data version: " + chunk.get().getDataVersion());
-                }
+                chunk.ifPresent(iChunk -> System.out.println("Chunk (0,0) data version: " + iChunk.getDataVersion()));
             }
         }
         catch (IOException e)

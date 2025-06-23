@@ -144,7 +144,7 @@ public class AnvilWriter implements IAnvilWriter
      * @throws UnsupportedOperationException always
      */
     @Override
-    public void writeChunk(IChunk chunk) throws IOException
+    public void writeChunk(IChunk chunk)
     {
         throw new UnsupportedOperationException("Individual chunk writing not yet implemented");
     }
@@ -211,7 +211,7 @@ public class AnvilWriter implements IAnvilWriter
      * @throws IOException if validation fails
      */
     @Override
-    public boolean validateRegion(IRegion region) throws IOException
+    public boolean validateRegion(IRegion region)
     {
         if (region == null)
         {
@@ -228,7 +228,7 @@ public class AnvilWriter implements IAnvilWriter
      * @throws IOException if validation fails
      */
     @Override
-    public boolean validateChunk(IChunk chunk) throws IOException
+    public boolean validateChunk(IChunk chunk)
     {
         if (chunk == null)
         {
@@ -245,10 +245,7 @@ public class AnvilWriter implements IAnvilWriter
     @Override
     public void flush() throws IOException
     {
-        if (raf != null)
-        {
-            raf.getFD().sync();
-        }
+        raf.getFD().sync();
     }
 
     /**
@@ -259,9 +256,6 @@ public class AnvilWriter implements IAnvilWriter
     @Override
     public void close() throws IOException
     {
-        if (raf != null)
-        {
-            raf.close();
-        }
+        raf.close();
     }
 }

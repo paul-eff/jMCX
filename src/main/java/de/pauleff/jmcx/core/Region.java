@@ -79,11 +79,10 @@ public class Region implements IRegion
      * Replaces a chunk in this region with the provided chunk.
      *
      * @param chunk the {@link IChunk} to replace (must be instance of {@link Chunk})
-     * @throws IOException if I/O error occurs
      * @throws IllegalArgumentException if chunk is not instance of Chunk or coordinates don't belong to this region
      */
     @Override
-    public void replaceChunk(IChunk chunk) throws IOException
+    public void replaceChunk(IChunk chunk)
     {
         if (!(chunk instanceof Chunk concreteChunk))
         {
