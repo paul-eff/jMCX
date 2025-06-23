@@ -17,8 +17,9 @@ import java.nio.ByteOrder;
 import static de.pauleff.jmcx.util.AnvilConstants.CHUNKS_PER_REGION;
 
 /**
- * Builder class for creating Chunk objects using the builder pattern.
- * Provides a fluent API for constructing chunks with NBT data.
+ * Builder class for creating {@link IChunk} objects using the builder pattern.
+ *
+ * @author Paul Ferlitz
  */
 public class ChunkBuilder
 {
@@ -42,7 +43,7 @@ public class ChunkBuilder
     /**
      * Creates a new ChunkBuilder instance.
      *
-     * @return a new ChunkBuilder
+     * @return new {@link ChunkBuilder}
      */
     public static ChunkBuilder create()
     {
@@ -52,9 +53,9 @@ public class ChunkBuilder
     /**
      * Creates a ChunkBuilder from an existing chunk.
      *
-     * @param chunk the chunk to copy data from
-     * @return a ChunkBuilder populated with data from the chunk
-     * @throws IOException if an error occurs reading the chunk data
+     * @param chunk {@link IChunk} to copy data from
+     * @return ChunkBuilder populated with chunk data
+     * @throws IOException if reading chunk data fails
      */
     public static ChunkBuilder fromChunk(IChunk chunk) throws IOException
     {
@@ -73,14 +74,12 @@ public class ChunkBuilder
             builder.compressionType = concreteChunk.getPayload().getCompressionType();
         }
 
-        // Copy NBT data if available
         ICompoundTag existingNbt = chunk.getNBTData();
         if (existingNbt != null)
         {
             builder.nbtData = existingNbt;
         } else
         {
-            // If source chunk has no NBT data, we'll create a minimal chunk
             System.out.println("Warning: Source chunk has no NBT data, will create minimal chunk structure");
         }
 
@@ -90,9 +89,9 @@ public class ChunkBuilder
     /**
      * Sets the chunk coordinates.
      *
-     * @param x the chunk X coordinate
-     * @param z the chunk Z coordinate
-     * @return this builder instance
+     * @param x chunk X coordinate
+     * @param z chunk Z coordinate
+     * @return this builder
      */
     public ChunkBuilder withCoordinates(int x, int z)
     {
@@ -104,10 +103,10 @@ public class ChunkBuilder
     }
 
     /**
-     * Sets the chunk X coordinate.
+     * Sets chunk X coordinate.
      *
-     * @param x the chunk X coordinate
-     * @return this builder instance
+     * @param x chunk X coordinate
+     * @return this builder
      */
     public ChunkBuilder withX(int x)
     {
@@ -117,10 +116,10 @@ public class ChunkBuilder
     }
 
     /**
-     * Sets the chunk Z coordinate.
+     * Sets chunk Z coordinate.
      *
-     * @param z the chunk Z coordinate
-     * @return this builder instance
+     * @param z chunk Z coordinate
+     * @return this builder
      */
     public ChunkBuilder withZ(int z)
     {
@@ -130,10 +129,10 @@ public class ChunkBuilder
     }
 
     /**
-     * Sets the data version of the chunk.
+     * Sets data version of the chunk.
      *
-     * @param dataVersion the data version (e.g., 4325 for Minecraft 1.20.5)
-     * @return this builder instance
+     * @param dataVersion data version (e.g., 4325 for Minecraft 1.21.5)
+     * @return this builder
      */
     public ChunkBuilder withDataVersion(int dataVersion)
     {
@@ -142,10 +141,10 @@ public class ChunkBuilder
     }
 
     /**
-     * Sets the timestamp of the chunk.
+     * Sets timestamp of the chunk.
      *
-     * @param timestamp the Unix timestamp
-     * @return this builder instance
+     * @param timestamp Unix timestamp
+     * @return this builder
      */
     public ChunkBuilder withTimestamp(int timestamp)
     {
@@ -154,9 +153,9 @@ public class ChunkBuilder
     }
 
     /**
-     * Sets the current timestamp.
+     * Sets current timestamp.
      *
-     * @return this builder instance
+     * @return this builder
      */
     public ChunkBuilder withCurrentTimestamp()
     {
@@ -165,10 +164,10 @@ public class ChunkBuilder
     }
 
     /**
-     * Sets the NBT data for the chunk.
+     * Sets NBT data for the chunk.
      *
-     * @param nbtData the NBT compound tag containing chunk data
-     * @return this builder instance
+     * @param nbtData {@link ICompoundTag} containing chunk data
+     * @return this builder
      */
     public ChunkBuilder withNBTData(ICompoundTag nbtData)
     {
@@ -177,9 +176,9 @@ public class ChunkBuilder
     }
 
     /**
-     * Sets the compression type to Zlib (standard compression).
+     * Sets compression type to Zlib.
      *
-     * @return this builder instance
+     * @return this builder
      */
     public ChunkBuilder withZlibCompression()
     {
@@ -188,9 +187,9 @@ public class ChunkBuilder
     }
 
     /**
-     * Sets the compression type to GZip.
+     * Sets compression type to GZip.
      *
-     * @return this builder instance
+     * @return this builder
      */
     public ChunkBuilder withGZipCompression()
     {
@@ -199,9 +198,9 @@ public class ChunkBuilder
     }
 
     /**
-     * Sets the compression type to uncompressed.
+     * Sets compression type to uncompressed.
      *
-     * @return this builder instance
+     * @return this builder
      */
     public ChunkBuilder withUncompressed()
     {
@@ -210,11 +209,11 @@ public class ChunkBuilder
     }
 
     /**
-     * Sets the chunk index within the region.
+     * Sets chunk index within the region.
      *
-     * @param index the chunk index (0-(CHUNKS_PER_REGION - 1))
-     * @return this builder instance
-     * @throws IllegalArgumentException if index is out of range
+     * @param index chunk index (0-1023)
+     * @return this builder
+     * @throws IllegalArgumentException if index out of range
      */
     public ChunkBuilder withIndex(int index)
     {
@@ -227,10 +226,10 @@ public class ChunkBuilder
     }
 
     /**
-     * Sets the location information for the chunk.
+     * Sets location information for the chunk.
      *
-     * @param location the chunk location in the region file
-     * @return this builder instance
+     * @param location chunk {@link Location} in region file
+     * @return this builder
      */
     public ChunkBuilder withLocation(Location location)
     {
@@ -239,9 +238,9 @@ public class ChunkBuilder
     }
 
     /**
-     * Creates an empty chunk location.
+     * Creates empty chunk location.
      *
-     * @return this builder instance
+     * @return this builder
      */
     public ChunkBuilder withEmptyLocation()
     {
@@ -250,10 +249,10 @@ public class ChunkBuilder
     }
 
     /**
-     * Enables or disables coordinate validation during building.
+     * Enables or disables coordinate validation.
      *
      * @param validate whether to validate coordinates
-     * @return this builder instance
+     * @return this builder
      */
     public ChunkBuilder validateCoordinates(boolean validate)
     {
@@ -262,77 +261,60 @@ public class ChunkBuilder
     }
 
     /**
-     * Creates an empty chunk with minimal NBT structure.
-     * Note: NBT data will be created during build() if not provided.
+     * Creates empty chunk with minimal NBT structure.
      *
-     * @return this builder instance
+     * @return this builder
      */
     public ChunkBuilder asEmptyChunk()
     {
-        this.nbtData = null; // Will be created in build() method
+        this.nbtData = null;
         return this;
     }
 
     /**
-     * Builds the Chunk object from the configured parameters.
+     * Builds the {@link IChunk} from configured parameters.
      *
-     * @return a new Chunk instance
-     * @throws IOException           if an error occurs during chunk construction
-     * @throws IllegalStateException if the builder is in an invalid state
+     * @return new {@link IChunk} instance
+     * @throws IOException if chunk construction fails
+     * @throws IllegalStateException if builder state invalid
      */
     public IChunk build() throws IOException
     {
         validateBuilder();
 
-        // Calculate index if not set - use region-local coordinates
         if (this.index == -1)
         {
             this.index = AnvilUtils.chunkCoordinatesToIndex(this.chunkX, this.chunkZ);
         }
 
-        // Validate that the calculated index is consistent with coordinates
         int expectedIndex = AnvilUtils.chunkCoordinatesToIndex(this.chunkX, this.chunkZ);
         if (this.index != expectedIndex)
         {
-            // Update index to match coordinates to ensure consistency
             this.index = expectedIndex;
         }
 
-        // Create location if not set
         if (this.location == null)
         {
             this.location = Location.createEmptyLocation();
         }
 
-        // Create minimal NBT data if not provided
         if (this.nbtData == null)
         {
-            // Create chunk with empty payload
-            Chunk chunk = new Chunk(this.index, this.location, this.timestamp, new byte[0]);
-            return chunk;
+            return new Chunk(this.index, this.location, this.timestamp, new byte[0]);
         } else
         {
-            // Update NBT coordinates to match builder settings
             updateNBTCoordinates();
-
-            // Create NBT payload before constructing chunk so coordinates are read correctly
             byte[] nbtPayload = createNBTPayload();
-
-            // Calculate sector count needed for the payload and update location
             int sectorCount = AnvilUtils.calculateSectorCount(nbtPayload.length);
-            this.location = AnvilUtils.createLocation(0, sectorCount); // offset will be set by region when writing
-
-            // Create chunk with NBT payload so constructor can read coordinates
-            Chunk chunk = new Chunk(this.index, this.location, this.timestamp, nbtPayload);
-            return chunk;
+            this.location = AnvilUtils.createLocation(0, sectorCount);
+            return new Chunk(this.index, this.location, this.timestamp, nbtPayload);
         }
     }
 
     /**
-     * Creates a compressed NBT payload from the NBT data.
-     * Uses the same format as Chunk.setNBTData() and ChunkPayload.
+     * Creates compressed NBT payload from NBT data.
      *
-     * @return compressed NBT payload as byte array
+     * @return compressed NBT payload
      * @throws IOException if NBT serialization fails
      */
     private byte[] createNBTPayload() throws IOException
@@ -342,7 +324,6 @@ public class ChunkBuilder
             return new byte[0];
         }
 
-        // Convert NBT data to raw bytes using NBTWriter (same as Chunk.setNBTData())
         ByteArrayOutputStream byteOutput = new ByteArrayOutputStream();
         try (DataOutputStream dos = new DataOutputStream(byteOutput);
              NBTWriter writer = new NBTWriter(dos))
@@ -351,14 +332,11 @@ public class ChunkBuilder
         }
         byte[] nbtBytes = byteOutput.toByteArray();
 
-        // Compress the NBT data using ChunkPayload's compression logic
-        ChunkPayload tempPayload = new ChunkPayload(new byte[0]); // Create temporary payload for compression
+        ChunkPayload tempPayload = new ChunkPayload(new byte[0]);
         byte[] compressedData = tempPayload.compressData(nbtBytes, compressionType);
 
-        // Create the final payload with proper format: [4-byte length][1-byte compression type][compressed data]
-        // Length field should contain only the compressed data length (excluding compression type byte)
         ByteBuffer buffer = ByteBuffer.allocate(5 + compressedData.length).order(ByteOrder.BIG_ENDIAN);
-        buffer.putInt(compressedData.length); // Only compressed data length
+        buffer.putInt(compressedData.length);
         buffer.put(compressionType);
         buffer.put(compressedData);
 
@@ -367,50 +345,40 @@ public class ChunkBuilder
 
 
     /**
-     * Updates the NBT data to ensure coordinates match builder settings.
-     * Priority: builder coordinates > NBT coordinates > defaults (0,0)
+     * Updates NBT coordinates to match builder settings.
      */
     private void updateNBTCoordinates()
     {
         if (nbtData == null) return;
 
-        // Determine final coordinates based on priority for each axis independently:
-        // 1. If X/Z was explicitly set via builder methods, use builder value
-        // 2. Otherwise, if NBT has X/Z coordinates, use those and update builder state
-        // 3. Otherwise, use builder defaults (0,0)
-
         int finalX = chunkX;
         int finalZ = chunkZ;
 
-        // Handle X coordinate
         if (!xExplicitlySet && nbtData.hasTag("xPos"))
         {
             finalX = nbtData.getInt("xPos");
-            this.chunkX = finalX; // Update builder state
+            this.chunkX = finalX;
         }
 
-        // Handle Z coordinate
         if (!zExplicitlySet && nbtData.hasTag("zPos"))
         {
             finalZ = nbtData.getInt("zPos");
-            this.chunkZ = finalZ; // Update builder state
+            this.chunkZ = finalZ;
         }
 
-        // Always ensure NBT has the final coordinates
         nbtData.setInt("xPos", finalX);
         nbtData.setInt("zPos", finalZ);
     }
 
     /**
-     * Validates the builder state before building.
+     * Validates builder state before building.
      *
-     * @throws IllegalStateException if the builder is in an invalid state
+     * @throws IllegalStateException if builder state invalid
      */
     private void validateBuilder()
     {
         if (validateCoordinates)
         {
-            // Basic coordinate validation
             if (Math.abs(chunkX) > 1875000 || Math.abs(chunkZ) > 1875000)
             {
                 throw new IllegalStateException("Chunk coordinates are too large: (" + chunkX + ", " + chunkZ + ")");
@@ -419,10 +387,8 @@ public class ChunkBuilder
 
         if (dataVersion <= 0)
         {
-            // If data version is 0 or negative, set it to a reasonable default
-            // This handles empty/corrupt chunks that don't have valid NBT data
             System.out.println("Warning: Invalid data version (" + dataVersion + "), setting to default 4325");
-            this.dataVersion = 4325; // Default to 1.21.5 data version
+            this.dataVersion = 4325;
         }
 
         if (timestamp < 0)

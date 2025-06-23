@@ -18,8 +18,9 @@ import static de.pauleff.jmcx.util.AnvilConstants.CHUNKS_PER_REGION;
 import static de.pauleff.jmcx.util.AnvilConstants.CHUNKS_PER_REGION_SIDE;
 
 /**
- * Builder class for creating Region objects using the builder pattern.
- * Provides a fluent API for constructing regions with chunks.
+ * Builder class for creating {@link IRegion} objects using the builder pattern.
+ *
+ * @author Paul Ferlitz
  */
 public class RegionBuilder
 {
@@ -35,7 +36,7 @@ public class RegionBuilder
     /**
      * Creates a new RegionBuilder instance.
      *
-     * @return a new RegionBuilder
+     * @return new RegionBuilder
      */
     public static RegionBuilder create()
     {
@@ -45,9 +46,9 @@ public class RegionBuilder
     /**
      * Creates a RegionBuilder from an existing region file.
      *
-     * @param file the region file to load
-     * @return a RegionBuilder populated with data from the file
-     * @throws IOException if an error occurs reading the file
+     * @param file region file to load
+     * @return RegionBuilder populated with file data
+     * @throws IOException if reading file fails
      */
     public static RegionBuilder fromFile(File file) throws IOException
     {
@@ -74,9 +75,9 @@ public class RegionBuilder
     /**
      * Creates a RegionBuilder from an existing region file path.
      *
-     * @param filePath the path to the region file
-     * @return a RegionBuilder populated with data from the file
-     * @throws IOException if an error occurs reading the file
+     * @param filePath path to region file
+     * @return RegionBuilder populated with file data
+     * @throws IOException if reading file fails
      */
     public static RegionBuilder fromFile(String filePath) throws IOException
     {
@@ -84,25 +85,25 @@ public class RegionBuilder
     }
 
     /**
-     * Sets the region coordinates.
+     * Sets region coordinates.
      *
-     * @param x the region X coordinate
-     * @param z the region Z coordinate
-     * @return this builder instance
+     * @param regionX region X coordinate
+     * @param regionZ region Z coordinate
+     * @return this builder
      */
-    public RegionBuilder withCoordinates(int x, int z)
+    public RegionBuilder withCoordinates(int regionX, int regionZ)
     {
-        this.regionX = x;
-        this.regionZ = z;
+        this.regionX = regionX;
+        this.regionZ = regionZ;
         return this;
     }
 
     /**
      * Adds a chunk to the region.
      *
-     * @param chunk the chunk to add
-     * @return this builder instance
-     * @throws IllegalArgumentException if the chunk is invalid or conflicts with existing chunks
+     * @param chunk {@link IChunk} to add
+     * @return this builder
+     * @throws IllegalArgumentException if chunk invalid or conflicts
      */
     public RegionBuilder addChunk(IChunk chunk)
     {
@@ -123,8 +124,8 @@ public class RegionBuilder
     /**
      * Adds multiple chunks to the region.
      *
-     * @param chunks the chunks to add
-     * @return this builder instance
+     * @param chunks {@link IChunk} list to add
+     * @return this builder
      */
     public RegionBuilder addChunks(List<IChunk> chunks)
     {
@@ -136,27 +137,27 @@ public class RegionBuilder
     }
 
     /**
-     * Adds an empty chunk at the specified coordinates.
+     * Adds empty chunk at specified coordinates.
      *
-     * @param chunkX the chunk X coordinate
-     * @param chunkZ the chunk Z coordinate
-     * @return this builder instance
-     * @throws IOException if an error occurs creating the empty chunk
+     * @param chunkX chunk X coordinate
+     * @param chunkZ chunk Z coordinate
+     * @return this builder
+     * @throws IOException if creating empty chunk fails
      */
     public RegionBuilder addEmptyChunk(int chunkX, int chunkZ) throws IOException
     {
         int index = calculateChunkIndex(chunkX, chunkZ);
-        Location location = Location.createEmptyLocation(); // Empty chunk has no data
+        Location location = Location.createEmptyLocation();
         Chunk emptyChunk = new Chunk(index, location, 0, new byte[0]);
         return addChunk(emptyChunk);
     }
 
     /**
-     * Removes a chunk from the region.
+     * Removes chunk from the region.
      *
-     * @param chunkX the chunk X coordinate
-     * @param chunkZ the chunk Z coordinate
-     * @return this builder instance
+     * @param chunkX chunk X coordinate
+     * @param chunkZ chunk Z coordinate
+     * @return this builder
      */
     public RegionBuilder removeChunk(int chunkX, int chunkZ)
     {
@@ -166,10 +167,10 @@ public class RegionBuilder
     }
 
     /**
-     * Removes a chunk from the region by index.
+     * Removes chunk from the region by index.
      *
-     * @param index the chunk index (0-1023)
-     * @return this builder instance
+     * @param index chunk index (0-1023)
+     * @return this builder
      */
     public RegionBuilder removeChunk(int index)
     {
@@ -182,10 +183,10 @@ public class RegionBuilder
     }
 
     /**
-     * Enables or disables chunk validation during building.
+     * Enables or disables chunk validation.
      *
      * @param validate whether to validate chunks
-     * @return this builder instance
+     * @return this builder
      */
     public RegionBuilder validateChunks(boolean validate)
     {
@@ -196,7 +197,7 @@ public class RegionBuilder
     /**
      * Clears all chunks from the builder.
      *
-     * @return this builder instance
+     * @return this builder
      */
     public RegionBuilder clearChunks()
     {
@@ -205,9 +206,9 @@ public class RegionBuilder
     }
 
     /**
-     * Gets the number of chunks currently in the builder.
+     * Gets number of chunks in the builder.
      *
-     * @return the chunk count
+     * @return chunk count
      */
     public int getChunkCount()
     {
@@ -215,9 +216,9 @@ public class RegionBuilder
     }
 
     /**
-     * Checks if the builder has any chunks.
+     * Checks if builder has any chunks.
      *
-     * @return true if the builder contains chunks
+     * @return true if builder contains chunks
      */
     public boolean hasChunks()
     {
@@ -225,17 +226,16 @@ public class RegionBuilder
     }
 
     /**
-     * Builds the Region object from the configured chunks.
+     * Builds the {@link IRegion} from configured chunks.
      *
-     * @return a new Region instance
-     * @throws IOException           if an error occurs during region construction
-     * @throws IllegalStateException if the builder is in an invalid state
+     * @return new {@link IRegion} instance
+     * @throws IOException if region construction fails
+     * @throws IllegalStateException if builder state invalid
      */
     public IRegion build() throws IOException
     {
         validateBuilder();
 
-        // Create a list of all CHUNKS_PER_REGION chunks (empty chunks for missing ones)
         List<IChunk> allChunks = new ArrayList<>(CHUNKS_PER_REGION);
 
         for (int i = 0; i < CHUNKS_PER_REGION; i++)
@@ -246,7 +246,6 @@ public class RegionBuilder
                 allChunks.add(chunk);
             } else
             {
-                // Create empty chunk for missing slots
                 Location emptyLocation = Location.createEmptyLocation();
                 Chunk emptyChunk = new Chunk(i, emptyLocation, 0, new byte[0]);
                 allChunks.add(emptyChunk);
@@ -257,30 +256,29 @@ public class RegionBuilder
     }
 
     /**
-     * Calculates the chunk index within a region based on chunk coordinates.
+     * Calculates chunk index within region from coordinates.
      *
-     * @param chunkX the chunk X coordinate
-     * @param chunkZ the chunk Z coordinate
-     * @return the chunk index (0-1023)
+     * @param chunkX chunk X coordinate
+     * @param chunkZ chunk Z coordinate
+     * @return chunk index (0-1023)
      */
     private int calculateChunkIndex(int chunkX, int chunkZ)
     {
-        // Convert to region-local coordinates
-        int localX = chunkX % CHUNKS_PER_REGION_SIDE; // chunkX % 32
-        int localZ = chunkZ % CHUNKS_PER_REGION_SIDE; // chunkZ % 32
+        int localX = chunkX % CHUNKS_PER_REGION_SIDE;
+        int localZ = chunkZ % CHUNKS_PER_REGION_SIDE;
         return localZ * CHUNKS_PER_REGION_SIDE + localX;
     }
 
     /**
-     * Validates chunk coordinates against the region boundaries.
+     * Validates chunk coordinates against region boundaries.
      *
-     * @param chunk the chunk to validate
-     * @throws IllegalArgumentException if the chunk coordinates are invalid
+     * @param chunk {@link IChunk} to validate
+     * @throws IllegalArgumentException if chunk coordinates invalid
      */
     private void validateChunkCoordinates(IChunk chunk)
     {
-        int expectedRegionX = chunk.getX() / CHUNKS_PER_REGION_SIDE; // chunk.getX() / 32
-        int expectedRegionZ = chunk.getZ() / CHUNKS_PER_REGION_SIDE; // chunk.getZ() / 32
+        int expectedRegionX = chunk.getX() / CHUNKS_PER_REGION_SIDE;
+        int expectedRegionZ = chunk.getZ() / CHUNKS_PER_REGION_SIDE;
 
         if (expectedRegionX != regionX || expectedRegionZ != regionZ)
         {
@@ -294,13 +292,12 @@ public class RegionBuilder
     }
 
     /**
-     * Validates the builder state before building.
+     * Validates builder state before building.
      *
-     * @throws IllegalStateException if the builder is in an invalid state
+     * @throws IllegalStateException if builder state invalid
      */
     private void validateBuilder()
     {
-        // Basic validation - could be expanded
         if (chunks.size() > CHUNKS_PER_REGION)
         {
             throw new IllegalStateException("Too many chunks: " + chunks.size() + " (maximum " + CHUNKS_PER_REGION + ")");
