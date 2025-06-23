@@ -34,21 +34,21 @@ public class ChunkFilter
     /**
      * Filters chunks by coordinate range.
      *
-     * @param chunks the list of chunks to filter
-     * @param minX   the minimum chunk X coordinate (inclusive)
-     * @param minZ   the minimum chunk Z coordinate (inclusive)
-     * @param maxX   the maximum chunk X coordinate (inclusive)
-     * @param maxZ   the maximum chunk Z coordinate (inclusive)
+     * @param chunks     the list of chunks to filter
+     * @param minChunkX  the minimum chunk X coordinate (inclusive)
+     * @param minChunkZ  the minimum chunk Z coordinate (inclusive)
+     * @param maxChunkX  the maximum chunk X coordinate (inclusive)
+     * @param maxChunkZ  the maximum chunk Z coordinate (inclusive)
      * @return a list of chunks within the coordinate range
      */
-    public static List<IChunk> filterByCoordinateRange(List<IChunk> chunks, int minX, int minZ, int maxX, int maxZ)
+    public static List<IChunk> filterByCoordinateRange(List<IChunk> chunks, int minChunkX, int minChunkZ, int maxChunkX, int maxChunkZ)
     {
         return chunks.stream()
                 .filter(chunk -> chunk != null && !chunk.isEmpty())
                 .filter(chunk -> {
                     int x = chunk.getX();
                     int z = chunk.getZ();
-                    return x >= minX && x <= maxX && z >= minZ && z <= maxZ;
+                    return x >= minChunkX && x <= maxChunkX && z >= minChunkZ && z <= maxChunkZ;
                 })
                 .collect(Collectors.toList());
     }

@@ -223,18 +223,6 @@ public class AnvilUtils
         }
     }
 
-    /**
-     * Calculates the chunk index within a region from chunk coordinates.
-     *
-     * @param chunkX the chunk X coordinate
-     * @param chunkZ the chunk Z coordinate
-     * @return the chunk index (0-1023) within the region
-     */
-    public static int calculateChunkIndex(int chunkX, int chunkZ)
-    {
-        // Convert to region-local coordinates and calculate index
-        return (chunkZ % CHUNKS_PER_REGION_SIDE) * CHUNKS_PER_REGION_SIDE + (chunkX % CHUNKS_PER_REGION_SIDE);
-    }
 
     /**
      * Standardized method for converting chunk coordinates to region-local index.

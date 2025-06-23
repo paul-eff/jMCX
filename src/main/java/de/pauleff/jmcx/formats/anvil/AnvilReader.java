@@ -79,7 +79,7 @@ public class AnvilReader implements IAnvilReader
         try
         {
             // Calculate chunk index within the region
-            int chunkIndex = AnvilUtils.calculateChunkIndex(chunkX, chunkZ);
+            int chunkIndex = AnvilUtils.chunkCoordinatesToIndex(chunkX, chunkZ);
 
             // Read location and timestamp for this specific chunk
             Location location = readChunkLocation(chunkIndex);

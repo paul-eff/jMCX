@@ -125,12 +125,12 @@ public class Chunk implements IChunk
     /**
      * Sets new chunk data from raw NBT bytes.
      *
-     * @param data the new chunk data as NBT bytes
-     * @throws IOException if an error occurs processing the data
+     * @param payload the new chunk data as NBT bytes
+     * @throws IOException if an error occurs processing the payload
      */
-    private void setChunkData(byte[] data) throws IOException
+    private void setChunkData(byte[] payload) throws IOException
     {
-        this.payload.compressAndSetData(data);
+        this.payload.compressAndSetData(payload);
     }
 
     /**

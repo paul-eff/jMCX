@@ -139,13 +139,13 @@ public class Region implements IRegion
      */
     private ArrayList<Chunk> readAllChunks() throws IOException
     {
-        int locationsCount = SECTOR_SIZE_BYTES / LOCATION_SIZE;
-        int timestampsCount = SECTOR_SIZE_BYTES / TIMESTAMP_SIZE;
+        int locationCount = SECTOR_SIZE_BYTES / LOCATION_SIZE;
+        int timestampCount = SECTOR_SIZE_BYTES / TIMESTAMP_SIZE;
 
-        Location[] locations = new Location[locationsCount];
-        int[] timestamps = new int[timestampsCount];
+        Location[] locations = new Location[locationCount];
+        int[] timestamps = new int[timestampCount];
 
-        for (int i = 0; i < locationsCount; i++)
+        for (int i = 0; i < locationCount; i++)
         {
             // Read and save location
             raf.seek(i * LOCATION_SIZE);
@@ -161,7 +161,7 @@ public class Region implements IRegion
 
         // Iterate over all locations and read their chunks
         ArrayList<Chunk> chunks = new ArrayList<>();
-        for (int i = 0; i < locationsCount; i++)
+        for (int i = 0; i < locationCount; i++)
         {
             Location currLocation = locations[i];
             if (currLocation.getOffset() == 0 && currLocation.getSectorCount() == 0)
