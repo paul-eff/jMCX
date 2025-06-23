@@ -7,18 +7,19 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Utility class for filtering chunks based on common criteria.
- * Provides essential filtering methods for the most frequent use cases.
+ * Utility class for filtering {@link IChunk} collections based on common criteria.
+ *
+ * @author Paul Ferlitz
  */
 public class ChunkFilter
 {
     /**
      * Filters chunks by data version range.
      *
-     * @param chunks     the list of chunks to filter
-     * @param minVersion the minimum data version (inclusive)
-     * @param maxVersion the maximum data version (inclusive)
-     * @return a list of chunks matching the data version criteria
+     * @param chunks list of {@link IChunk} to filter
+     * @param minVersion minimum data version (inclusive)
+     * @param maxVersion maximum data version (inclusive)
+     * @return chunks matching data version criteria
      */
     public static List<IChunk> filterByDataVersion(List<IChunk> chunks, int minVersion, int maxVersion)
     {
@@ -34,12 +35,12 @@ public class ChunkFilter
     /**
      * Filters chunks by coordinate range.
      *
-     * @param chunks     the list of chunks to filter
-     * @param minChunkX  the minimum chunk X coordinate (inclusive)
-     * @param minChunkZ  the minimum chunk Z coordinate (inclusive)
-     * @param maxChunkX  the maximum chunk X coordinate (inclusive)
-     * @param maxChunkZ  the maximum chunk Z coordinate (inclusive)
-     * @return a list of chunks within the coordinate range
+     * @param chunks list of {@link IChunk} to filter
+     * @param minChunkX minimum chunk X coordinate (inclusive)
+     * @param minChunkZ minimum chunk Z coordinate (inclusive)
+     * @param maxChunkX maximum chunk X coordinate (inclusive)
+     * @param maxChunkZ maximum chunk Z coordinate (inclusive)
+     * @return chunks within coordinate range
      */
     public static List<IChunk> filterByCoordinateRange(List<IChunk> chunks, int minChunkX, int minChunkZ, int maxChunkX, int maxChunkZ)
     {
@@ -55,19 +56,17 @@ public class ChunkFilter
 
     /**
      * Filters chunks by block coordinate range.
-     * Converts block coordinates to chunk coordinates and filters accordingly.
      *
-     * @param chunks    the list of chunks to filter
-     * @param minBlockX the minimum block X coordinate (inclusive)
-     * @param minBlockZ the minimum block Z coordinate (inclusive)
-     * @param maxBlockX the maximum block X coordinate (inclusive)
-     * @param maxBlockZ the maximum block Z coordinate (inclusive)
-     * @return a list of chunks that contain blocks within the specified range
+     * @param chunks list of {@link IChunk} to filter
+     * @param minBlockX minimum block X coordinate (inclusive)
+     * @param minBlockZ minimum block Z coordinate (inclusive)
+     * @param maxBlockX maximum block X coordinate (inclusive)
+     * @param maxBlockZ maximum block Z coordinate (inclusive)
+     * @return chunks containing blocks within specified range
      */
     public static List<IChunk> filterByBlockCoordinates(List<IChunk> chunks, int minBlockX, int minBlockZ,
                                                         int maxBlockX, int maxBlockZ)
     {
-        // Convert block coordinates to chunk coordinates
         int[] minChunk = AnvilUtils.blockToChunk(minBlockX, minBlockZ);
         int[] maxChunk = AnvilUtils.blockToChunk(maxBlockX, maxBlockZ);
 
@@ -75,11 +74,10 @@ public class ChunkFilter
     }
 
     /**
-     * Filters chunks that contain ownable entities (entities with Owner or Target tags).
-     * This is useful for finding chunks that need UUID conversion.
+     * Filters chunks containing ownable entities (Owner or Target tags).
      *
-     * @param chunks the list of chunks to filter
-     * @return a list of chunks containing ownable entities
+     * @param chunks list of {@link IChunk} to filter
+     * @return chunks containing ownable entities
      */
     public static List<IChunk> filterWithOwnables(List<IChunk> chunks)
     {
@@ -91,7 +89,6 @@ public class ChunkFilter
                         return chunk.hasOwnableEntities();
                     } catch (IOException e)
                     {
-                        // Log warning but continue processing
                         System.err.println("Warning: Failed to check ownable entities for chunk at (" +
                                 chunk.getX() + ", " + chunk.getZ() + "): " + e.getMessage());
                         return false;
@@ -101,10 +98,10 @@ public class ChunkFilter
     }
 
     /**
-     * Filters non-empty chunks from a list.
+     * Filters non-empty chunks.
      *
-     * @param chunks the list of chunks to filter
-     * @return a list containing only non-empty chunks
+     * @param chunks list of {@link IChunk} to filter
+     * @return non-empty chunks only
      */
     public static List<IChunk> filterNonEmpty(List<IChunk> chunks)
     {

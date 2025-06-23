@@ -9,14 +9,16 @@ import java.nio.ByteOrder;
 import static de.pauleff.jmcx.util.AnvilConstants.*;
 
 /**
- * The AnvilUtils class provides utility methods for MCA file operations.
+ * Utility methods for MCA file operations and coordinate conversions.
+ *
+ * @author Paul Ferlitz
  */
 public class AnvilUtils
 {
     /**
      * The standard sector size for MCA files (4KiB).
      */
-    public static final int SECTOR_SIZE = 4096; // 4KiB
+    public static final int SECTOR_SIZE = 4096;
 
     /**
      * Reads an integer from a byte array with the specified byte order.
@@ -35,13 +37,12 @@ public class AnvilUtils
     }
 
     /**
-     * Pads data to the specified sector size boundary.
-     * According to the Minecraft Wiki, chunks are padded to 4KiB sector boundaries.
+     * Pads data to specified sector size boundary.
      *
-     * @param data       the data to pad
-     * @param sectorSize the sector size to pad to (should be 4096 for MCA files)
-     * @return the padded data
-     * @throws IllegalArgumentException if sectorSize is not positive
+     * @param data the data to pad
+     * @param sectorSize the sector size
+     * @return padded data
+     * @throws IllegalArgumentException if sectorSize not positive
      */
     public static byte[] padToSectorSize(byte[] data, int sectorSize)
     {
@@ -55,29 +56,25 @@ public class AnvilUtils
             throw new IllegalArgumentException("Data cannot be null");
         }
 
-        // If data is already aligned, no padding needed
         int remainder = data.length % sectorSize;
         if (remainder == 0)
         {
             return data;
         }
 
-        // Calculate padding needed
         int neededPadding = sectorSize - remainder;
         byte[] paddedData = new byte[data.length + neededPadding];
 
-        // Copy original data
         System.arraycopy(data, 0, paddedData, 0, data.length);
 
-        // Padding bytes are automatically zero-initialized
         return paddedData;
     }
 
     /**
-     * Pads data to the standard MCA sector size (4KiB).
+     * Pads data to standard MCA sector size.
      *
      * @param data the data to pad
-     * @return the padded data
+     * @return padded data
      */
     public static byte[] padToSectorSize(byte[] data)
     {
@@ -85,10 +82,10 @@ public class AnvilUtils
     }
 
     /**
-     * Calculates the number of sectors needed for the given data size.
+     * Calculates sectors needed for data size.
      *
-     * @param dataSize the size of the data in bytes
-     * @return the number of 4KiB sectors needed
+     * @param dataSize data size in bytes
+     * @return number of 4KiB sectors needed
      */
     public static int calculateSectorCount(int dataSize)
     {
@@ -100,10 +97,10 @@ public class AnvilUtils
     }
 
     /**
-     * Validates that an offset is properly aligned to sector boundaries.
+     * Validates offset is sector-aligned.
      *
      * @param offset the offset to validate
-     * @return true if the offset is sector-aligned
+     * @return true if sector-aligned
      */
     public static boolean isSectorAligned(long offset)
     {
@@ -113,9 +110,9 @@ public class AnvilUtils
     /**
      * Converts block coordinates to chunk coordinates.
      *
-     * @param blockX the block X coordinate
-     * @param blockZ the block Z coordinate
-     * @return an array containing chunk X and Z coordinates
+     * @param blockX block X coordinate
+     * @param blockZ block Z coordinate
+     * @return [chunkX, chunkZ] coordinates
      */
     public static int[] blockToChunk(int blockX, int blockZ)
     {
@@ -127,9 +124,9 @@ public class AnvilUtils
     /**
      * Converts chunk coordinates to region coordinates.
      *
-     * @param chunkX the chunk X coordinate
-     * @param chunkZ the chunk Z coordinate
-     * @return an array containing region X and Z coordinates
+     * @param chunkX chunk X coordinate
+     * @param chunkZ chunk Z coordinate
+     * @return [regionX, regionZ] coordinates
      */
     public static int[] chunkToRegion(int chunkX, int chunkZ)
     {
@@ -141,9 +138,9 @@ public class AnvilUtils
     /**
      * Converts block coordinates directly to region coordinates.
      *
-     * @param blockX the block X coordinate
-     * @param blockZ the block Z coordinate
-     * @return an array containing region X and Z coordinates
+     * @param blockX block X coordinate
+     * @param blockZ block Z coordinate
+     * @return [regionX, regionZ] coordinates
      */
     public static int[] blockToRegion(int blockX, int blockZ)
     {
@@ -152,11 +149,11 @@ public class AnvilUtils
     }
 
     /**
-     * Generates a region filename from region coordinates.
+     * Generates region filename from coordinates.
      *
-     * @param regionX the region X coordinate
-     * @param regionZ the region Z coordinate
-     * @return the region filename (e.g., "r.0.0.mca")
+     * @param regionX region X coordinate
+     * @param regionZ region Z coordinate
+     * @return region filename (e.g., "r.0.0.mca")
      */
     public static String generateRegionFilename(int regionX, int regionZ)
     {
@@ -164,11 +161,11 @@ public class AnvilUtils
     }
 
     /**
-     * Parses region coordinates from a region filename.
+     * Parses region coordinates from filename.
      *
-     * @param filename the region filename (e.g., "r.0.0.mca")
-     * @return an array containing region X and Z coordinates
-     * @throws IllegalArgumentException if the filename format is invalid
+     * @param filename region filename (e.g., "r.0.0.mca")
+     * @return [regionX, regionZ] coordinates
+     * @throws IllegalArgumentException if filename format invalid
      */
     public static int[] parseRegionFilename(String filename)
     {
@@ -199,10 +196,10 @@ public class AnvilUtils
     }
 
     /**
-     * Validates that a file is a valid region file based on its name and basic properties.
+     * Validates file is a valid region file.
      *
-     * @param file the file to validate
-     * @return true if the file appears to be a valid region file
+     * @param file file to validate
+     * @return true if valid region file
      */
     public static boolean isValidRegionFile(java.io.File file)
     {
@@ -215,7 +212,6 @@ public class AnvilUtils
         {
             parseRegionFilename(file.getName());
 
-            // Basic size check - must be at least header size
             return file.length() >= 8192;
         } catch (IllegalArgumentException e)
         {
@@ -225,12 +221,11 @@ public class AnvilUtils
 
 
     /**
-     * Standardized method for converting chunk coordinates to region-local index.
-     * Uses the formula: (z % 32) * 32 + (x % 32)
+     * Converts chunk coordinates to region-local index.
      *
-     * @param chunkX the chunk X coordinate
-     * @param chunkZ the chunk Z coordinate
-     * @return the chunk index (0-1023) within the region
+     * @param chunkX chunk X coordinate
+     * @param chunkZ chunk Z coordinate
+     * @return chunk index (0-1023) within region
      */
     public static int chunkCoordinatesToIndex(int chunkX, int chunkZ)
     {
@@ -238,13 +233,13 @@ public class AnvilUtils
     }
 
     /**
-     * Calculates chunk coordinates from a region-local chunk index.
+     * Calculates chunk coordinates from region-local index.
      *
-     * @param regionX    the region X coordinate
-     * @param regionZ    the region Z coordinate
-     * @param chunkIndex the chunk index within the region (0-1023)
-     * @return an array containing global chunk X and Z coordinates
-     * @throws IllegalArgumentException if chunk index is out of range
+     * @param regionX region X coordinate
+     * @param regionZ region Z coordinate
+     * @param chunkIndex chunk index within region (0-1023)
+     * @return [chunkX, chunkZ] global coordinates
+     * @throws IllegalArgumentException if index out of range
      */
     public static int[] calculateChunkCoordinates(int regionX, int regionZ, int chunkIndex)
     {
@@ -263,13 +258,12 @@ public class AnvilUtils
     }
 
     /**
-     * Creates a Location object from offset and sector count values.
-     * Encodes the values into the 4-byte format expected by the Location constructor.
+     * Creates {@link Location} object from offset and sector count.
      *
-     * @param offset      the chunk offset in sectors (3 bytes, max value 16777215)
-     * @param sectorCount the number of sectors (1 byte, max value 255)
-     * @return a new Location object
-     * @throws IllegalArgumentException if values are out of range
+     * @param offset chunk offset in sectors (max 16777215)
+     * @param sectorCount number of sectors (max 255)
+     * @return new {@link Location} object
+     * @throws IllegalArgumentException if values out of range
      */
     public static Location createLocation(int offset, int sectorCount)
     {
@@ -283,27 +277,24 @@ public class AnvilUtils
             throw new IllegalArgumentException("Sector count must be between 0 and 255, got: " + sectorCount);
         }
 
-        // Encode into 4-byte array: [offset (3 bytes, big-endian)][sectorCount (1 byte)]
         byte[] locationBytes = new byte[4];
 
-        // Write offset as 3 bytes (big-endian)
         locationBytes[0] = (byte) ((offset >> 16) & 0xFF);
         locationBytes[1] = (byte) ((offset >> 8) & 0xFF);
         locationBytes[2] = (byte) (offset & 0xFF);
 
-        // Write sector count as 1 byte
         locationBytes[3] = (byte) sectorCount;
 
         return new Location(locationBytes);
     }
 
     /**
-     * Validates sector alignment and size constraints for MCA format.
+     * Validates chunk placement for MCA format.
      *
-     * @param offset      the chunk offset in sectors
-     * @param sectorCount the number of sectors
-     * @param fileSize    the total file size in bytes
-     * @return true if the chunk placement is valid
+     * @param offset chunk offset in sectors
+     * @param sectorCount number of sectors
+     * @param fileSize total file size in bytes
+     * @return true if placement valid
      */
     public static boolean isValidChunkPlacement(int offset, int sectorCount, long fileSize)
     {
