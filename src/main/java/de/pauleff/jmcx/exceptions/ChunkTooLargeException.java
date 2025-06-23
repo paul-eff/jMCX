@@ -4,7 +4,8 @@ import static de.pauleff.jmcx.util.AnvilConstants.MAX_CHUNK_SIZE_FORMATTED;
 
 /**
  * Exception thrown when a chunk exceeds the maximum size limit.
- * According to the Minecraft Wiki, chunks are always less than 1MiB (1,048,576 bytes).
+ *
+ * @author Paul Ferlitz
  */
 public class ChunkTooLargeException extends RuntimeException
 {
