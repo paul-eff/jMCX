@@ -44,7 +44,7 @@ public class Location
         return offset;
     }
 
-    protected void setOffset(int offset)
+    public void setOffset(int offset)
     {
         this.offset = offset;
     }
@@ -59,7 +59,7 @@ public class Location
         return sectorCount;
     }
 
-    protected void setSectorCount(int sectorCount)
+    public void setSectorCount(int sectorCount)
     {
         this.sectorCount = sectorCount;
     }
