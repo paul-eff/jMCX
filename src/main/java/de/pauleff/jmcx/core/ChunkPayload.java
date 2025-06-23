@@ -3,8 +3,6 @@ package de.pauleff.jmcx.core;
 import de.pauleff.jmcx.exceptions.ChunkTooLargeException;
 import de.pauleff.jmcx.util.AnvilUtils;
 
-import static de.pauleff.jmcx.util.AnvilConstants.MAX_CHUNK_SIZE_BYTES;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -15,6 +13,8 @@ import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.InflaterInputStream;
+
+import static de.pauleff.jmcx.util.AnvilConstants.MAX_CHUNK_SIZE_BYTES;
 
 /**
  * The ChunkPayload class represents the actual chunk's data.
@@ -31,7 +31,7 @@ public class ChunkPayload
      * Constructs a ChunkPayload object from a byte array.
      *
      * @param payload the byte array representing the chunk payload
-     * @throws IOException           if an I/O error occurs during decompression
+     * @throws IOException            if an I/O error occurs during decompression
      * @throws ChunkTooLargeException if the payload exceeds the maximum chunk size
      */
     public ChunkPayload(byte[] payload) throws IOException

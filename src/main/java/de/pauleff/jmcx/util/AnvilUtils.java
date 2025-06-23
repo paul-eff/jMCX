@@ -5,10 +5,7 @@ import de.pauleff.jmcx.core.Location;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-import static de.pauleff.jmcx.util.AnvilConstants.CHUNKS_PER_REGION;
-import static de.pauleff.jmcx.util.AnvilConstants.CHUNKS_PER_REGION_SIDE;
-import static de.pauleff.jmcx.util.AnvilConstants.BLOCKS_PER_CHUNK_SIDE;
-import static de.pauleff.jmcx.util.AnvilConstants.MCA_EXTENSION;
+import static de.pauleff.jmcx.util.AnvilConstants.*;
 
 /**
  * The AnvilUtils class provides utility methods for MCA file operations.
@@ -192,8 +189,7 @@ public class AnvilUtils
             int x = Integer.parseInt(parts[1]);
             int z = Integer.parseInt(parts[2]);
             return new int[]{x, z};
-        }
-        catch (NumberFormatException e)
+        } catch (NumberFormatException e)
         {
             throw new IllegalArgumentException(
                     "Invalid coordinates in filename: " + filename + ". Coordinates must be integers.", e
@@ -218,11 +214,10 @@ public class AnvilUtils
         {
             // Validate filename format
             parseRegionFilename(file.getName());
-            
+
             // Basic size check - must be at least header size
             return file.length() >= 8192; // 8KiB header minimum
-        }
-        catch (IllegalArgumentException e)
+        } catch (IllegalArgumentException e)
         {
             return false;
         }
@@ -257,8 +252,8 @@ public class AnvilUtils
     /**
      * Calculates chunk coordinates from a region-local chunk index.
      *
-     * @param regionX the region X coordinate
-     * @param regionZ the region Z coordinate
+     * @param regionX    the region X coordinate
+     * @param regionZ    the region Z coordinate
      * @param chunkIndex the chunk index within the region (0-1023)
      * @return an array containing global chunk X and Z coordinates
      * @throws IllegalArgumentException if chunk index is out of range
@@ -272,10 +267,10 @@ public class AnvilUtils
 
         int localX = chunkIndex % CHUNKS_PER_REGION_SIDE;
         int localZ = chunkIndex / CHUNKS_PER_REGION_SIDE;
-        
+
         int globalChunkX = regionX * CHUNKS_PER_REGION_SIDE + localX;
         int globalChunkZ = regionZ * CHUNKS_PER_REGION_SIDE + localZ;
-        
+
         return new int[]{globalChunkX, globalChunkZ};
     }
 
@@ -283,7 +278,7 @@ public class AnvilUtils
      * Creates a Location object from offset and sector count values.
      * Encodes the values into the 4-byte format expected by the Location constructor.
      *
-     * @param offset the chunk offset in sectors (3 bytes, max value 16777215)
+     * @param offset      the chunk offset in sectors (3 bytes, max value 16777215)
      * @param sectorCount the number of sectors (1 byte, max value 255)
      * @return a new Location object
      * @throws IllegalArgumentException if values are out of range
@@ -294,32 +289,32 @@ public class AnvilUtils
         {
             throw new IllegalArgumentException("Offset must be between 0 and 16777215, got: " + offset);
         }
-        
+
         if (sectorCount < 0 || sectorCount > 255) // 1 byte max value
         {
             throw new IllegalArgumentException("Sector count must be between 0 and 255, got: " + sectorCount);
         }
-        
+
         // Encode into 4-byte array: [offset (3 bytes, big-endian)][sectorCount (1 byte)]
         byte[] locationBytes = new byte[4];
-        
+
         // Write offset as 3 bytes (big-endian)
         locationBytes[0] = (byte) ((offset >> 16) & 0xFF);
         locationBytes[1] = (byte) ((offset >> 8) & 0xFF);
         locationBytes[2] = (byte) (offset & 0xFF);
-        
+
         // Write sector count as 1 byte
         locationBytes[3] = (byte) sectorCount;
-        
+
         return new Location(locationBytes);
     }
 
     /**
      * Validates sector alignment and size constraints for MCA format.
      *
-     * @param offset the chunk offset in sectors
+     * @param offset      the chunk offset in sectors
      * @param sectorCount the number of sectors
-     * @param fileSize the total file size in bytes
+     * @param fileSize    the total file size in bytes
      * @return true if the chunk placement is valid
      */
     public static boolean isValidChunkPlacement(int offset, int sectorCount, long fileSize)
@@ -328,15 +323,15 @@ public class AnvilUtils
         {
             return false;
         }
-        
+
         if (sectorCount <= 0 || sectorCount > 255)
         {
             return false;
         }
-        
+
         long chunkStart = (long) offset * SECTOR_SIZE;
         long chunkEnd = chunkStart + (long) sectorCount * SECTOR_SIZE;
-        
+
         return chunkEnd <= fileSize;
     }
 }

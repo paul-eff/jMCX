@@ -4,11 +4,6 @@ import de.pauleff.jmcx.api.IChunk;
 import de.pauleff.jmcx.api.IRegion;
 import de.pauleff.jmcx.util.AnvilUtils;
 
-import static de.pauleff.jmcx.util.AnvilConstants.CHUNKS_PER_REGION;
-import static de.pauleff.jmcx.util.AnvilConstants.CHUNKS_PER_REGION_SIDE;
-import static de.pauleff.jmcx.util.AnvilConstants.BLOCKS_PER_CHUNK_SIDE;
-import static de.pauleff.jmcx.util.AnvilConstants.SECTOR_SIZE_BYTES;
-
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteOrder;
@@ -16,10 +11,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static de.pauleff.jmcx.util.AnvilConstants.*;
+
 /**
  * The Region class represents a region in the Anvil file format.
  * It handles reading chunk data from a region file.
- * 
+ *
  * @author Paul Ferlitz
  */
 public class Region implements IRegion
@@ -64,12 +61,12 @@ public class Region implements IRegion
         {
             throw new IllegalArgumentException("Chunks list must contain exactly " + CHUNKS_PER_REGION + " chunks, got: " + chunks.size());
         }
-        
+
         this.x = x;
         this.z = z;
         this.raf = null; // No file backing this region
         this.chunks = new ArrayList<>(CHUNKS_PER_REGION);
-        
+
         // Convert IChunk to Chunk instances
         for (IChunk chunk : chunks)
         {
@@ -88,16 +85,16 @@ public class Region implements IRegion
         {
             throw new IllegalArgumentException("Chunk must be an instance of de.pauleff.jmcx.core.Chunk");
         }
-        
+
         // Calculate the correct region-local index for the chunk coordinates
         int targetIndex = AnvilUtils.chunkCoordinatesToIndex(concreteChunk.getX(), concreteChunk.getZ());
-        
+
         // Validate that the chunk belongs to this region
         if (!containsChunk(concreteChunk.getX(), concreteChunk.getZ()))
         {
             throw new IllegalArgumentException(
-                String.format("Chunk at (%d, %d) does not belong to region (%d, %d)", 
-                    concreteChunk.getX(), concreteChunk.getZ(), this.x, this.z));
+                    String.format("Chunk at (%d, %d) does not belong to region (%d, %d)",
+                            concreteChunk.getX(), concreteChunk.getZ(), this.x, this.z));
         }
         this.chunks.set(targetIndex, concreteChunk);
     }
@@ -171,8 +168,7 @@ public class Region implements IRegion
             {
                 // Empty chunk - create with empty payload
                 chunks.add(new Chunk(i, locations[i], timestamps[i], new byte[0]));
-            }
-            else
+            } else
             {
                 // Read chunk data from file
                 raf.seek(currLocation.getOffset() * (long) SECTOR_SIZE_BYTES);
@@ -192,7 +188,7 @@ public class Region implements IRegion
         {
             return Optional.empty();
         }
-        
+
         int index = AnvilUtils.chunkCoordinatesToIndex(chunkX, chunkZ);
         if (index >= 0 && index < chunks.size())
         {
@@ -203,16 +199,14 @@ public class Region implements IRegion
                 if (chunk.getX() == chunkX && chunk.getZ() == chunkZ)
                 {
                     return Optional.of(chunk);
-                }
-                else
+                } else
                 {
                     // Coordinates mismatch - this indicates a bug in chunk placement
-                    System.err.println(String.format("WARNING: Retrieved chunk position [%d, %d] does not match requested [%d, %d] at index %d", 
-                        chunk.getX(), chunk.getZ(), chunkX, chunkZ, index));
+                    System.err.printf("WARNING: Retrieved chunk position [%d, %d] does not match requested [%d, %d] at index %d%n",
+                            chunk.getX(), chunk.getZ(), chunkX, chunkZ, index);
                     return Optional.empty();
                 }
-            }
-            else if (chunk != null)
+            } else if (chunk != null)
             {
                 // Empty chunk at correct index - return it
                 return Optional.of(chunk);

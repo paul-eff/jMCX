@@ -7,15 +7,14 @@ import de.pauleff.jmcx.core.Chunk;
 import de.pauleff.jmcx.core.Region;
 import de.pauleff.jmcx.util.AnvilUtils;
 
-import static de.pauleff.jmcx.util.AnvilConstants.CHUNKS_PER_REGION;
-
-import static de.pauleff.jmcx.util.AnvilConstants.SECTOR_SIZE_BYTES;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+
+import static de.pauleff.jmcx.util.AnvilConstants.CHUNKS_PER_REGION;
+import static de.pauleff.jmcx.util.AnvilConstants.SECTOR_SIZE_BYTES;
 
 public class AnvilWriter implements IAnvilWriter
 {
@@ -43,41 +42,40 @@ public class AnvilWriter implements IAnvilWriter
             Files.copy(anvilFile.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
             System.out.printf("Created backup of file %s%n", anvilFile.getName());
         }
-        
+
         // Step 1: Allocate proper sectors for all chunks that have data
         int currentSectorOffset = 2; // Start after header (2 sectors = 8KiB)
-        
+
         for (int i = 0; i < region.getChunks().size(); i++)
         {
             IChunk iChunk = region.getChunks().get(i);
             Chunk chunk = (Chunk) iChunk;
-            
+
             if (chunk.getDataSize() > 0)
             {
                 // Get the actual payload size
                 byte[] fullPayload = chunk.getPayload().getFullPayload();
                 int sectorsNeeded = AnvilUtils.calculateSectorCount(fullPayload.length);
-                
+
                 // Update chunk location with proper sector allocation
                 chunk.getLocation().setOffset(currentSectorOffset);
                 chunk.getLocation().setSectorCount(sectorsNeeded);
-                
+
                 currentSectorOffset += sectorsNeeded;
-            }
-            else
+            } else
             {
                 // Empty chunk - set to 0 offset and 0 sectors
                 chunk.getLocation().setOffset(0);
                 chunk.getLocation().setSectorCount(0);
             }
         }
-        
+
         // Step 2: Write Header (locations, timestamps) - write in array order
         for (int i = 0; i < region.getChunks().size(); i++)
         {
             IChunk iChunk = region.getChunks().get(i);
             Chunk chunk = (Chunk) iChunk;
-            
+
             // Write header entry at position i (array index corresponds to file header position)
             raf.seek(i * 4L);
             int offset = chunk.getLocation().getOffset();
@@ -96,7 +94,7 @@ public class AnvilWriter implements IAnvilWriter
             raf.writeByte((offset >> 8) & 0xFF);
             raf.writeByte(offset & 0xFF);
             raf.writeByte(chunk.getLocation().getSectorCount() & 0xFF);
-            
+
             // Write timestamp
             raf.seek(i * 4L + (long) SECTOR_SIZE_BYTES);
             raf.writeInt(chunk.getTimestamp());
@@ -107,7 +105,7 @@ public class AnvilWriter implements IAnvilWriter
         {
             Chunk chunk = (Chunk) iChunk;
             if (chunk.getLocation().getOffset() == 0) continue; // Skip empty chunks
-            
+
             raf.seek(chunk.getLocation().getOffset() * (long) SECTOR_SIZE_BYTES);
 
             // Get the complete payload (length + compression type + data)
@@ -157,6 +155,11 @@ public class AnvilWriter implements IAnvilWriter
         return backupEnabled;
     }
 
+    public void setBackupEnabled(boolean enabled)
+    {
+        this.backupEnabled = enabled;
+    }
+
     @Override
     public String getFilePath()
     {
@@ -167,11 +170,6 @@ public class AnvilWriter implements IAnvilWriter
     public boolean canWrite()
     {
         return anvilFile.canWrite() || (!anvilFile.exists() && anvilFile.getParentFile().canWrite());
-    }
-
-    public void setBackupEnabled(boolean enabled)
-    {
-        this.backupEnabled = enabled;
     }
 
     @Override

@@ -1,42 +1,122 @@
-# jMCX v0.2
-<p align="center">
-  <img src="https://img.shields.io/badge/version-0.2-blue">
-  <img src="https://img.shields.io/badge/minecraft-1.21.4 (Java)-green">
-  <img src="https://img.shields.io/badge/java-21-red">
-</p>
-Currently there aren't any sophisticated libraries to interact with Minecraft Anvil (more to come) files in Java (read, edit and write). 
-And those that are around haven't been updated in a while or are directly integrated to projects like mcaselector by Querz. 
+# jMCX v0.9.0 BETA
 
-With this library I want to provide an up to date and efficient (and also overengineered) way to interact with Anvil (more to come) files.
+<div align="center">
 
-jMCX will in the near future be part of [MinecraftOfflineOnlineConverter](https://github.com/paul-eff/MinecraftOfflineOnlineConverter) to enable UUID conversion down to entity level.
+![Version](https://img.shields.io/badge/version-0.9.0%20BETA-blue)
+![Minecraft](https://img.shields.io/badge/minecraft-1.21.5(Java)-green)
+![Java](https://img.shields.io/badge/java-21-red)
+![License](https://img.shields.io/badge/license-MIT-brightgreen)
 
-### Supports
-- Operations: Reading and writing (.mca from/to file)
-- Compression types: LZIP, GZIP and NONE
-### WIP
-- Operations: Editing
-- Compression types: LZ4
-### Future
-- Bedrock Region format
-- GUI (BIG maybe!)
+*A modern Java library for reading, editing, and writing Minecraft Anvil region files*
 
-# Usage
+</div>
 
-- Obviously download the jar
-- Add it as a dependency to your project (dependent on your IDE)
-- Take a look into the `Main.java` file.
+## ✨ Features
 
-# Sources
-- https://minecraft.wiki/w/Region_file_format
-- Dependencies: [jNBT](https://github.com/paul-eff/jNBT)
+**jMCX** provides a comprehensive solution for Minecraft world file manipulation with clean, efficient APIs:
 
-# Disclaimer
-Please always make a backup of your files before using this tool.
-Whilst it was thoroughly tested, there is always the chance that a bug might occur!
+- 🎯 **Complete Anvil Region Format Support** - Read, edit, and write .mca region files
+- 🛠️ **Fluent Builder API** - Modern builder pattern for easy structure creation
+- 📦 **Smart Compression** - Automatic detection and support for GZIP, ZLIB, and uncompressed files
+- 🔧 **Interface-Based Design** - Clean APIs
+- ⚡ **Type Safety** - Minimal casting
 
-If you need support for a specific version or a custom feature, please leave me a message or issue :)!
+## 🚀 Quick Start
 
-# Remark
+**Read region file:**
+```java
+AnvilReader reader = new AnvilReader();
+Region region = reader.readRegion(new File("r.0.0.mca"));
+List<Chunk> chunks = region.getChunks();
+```
+
+**Edit chunk blocks:**
+```java
+Optional<IChunk> chunkOpt = region.getChunk(0, 0);
+if (chunkOpt.isPresent()) {
+    IChunk chunk = chunkOpt.get();
+    ICompoundTag nbt = chunk.getNBTData();
+    IListTag sections = nbt.getList("sections");
+    
+    // Replace dirt with diamond in block palette
+    for (int i = 0; i < sections.size(); i++) {
+        ICompoundTag section = (ICompoundTag) sections.get(i);
+        ICompoundTag blockStates = section.getCompound("block_states");
+        IListTag palette = blockStates.getList("palette");
+        
+        for (int j = 0; j < palette.size(); j++) {
+            ICompoundTag block = (ICompoundTag) palette.get(j);
+            if ("minecraft:dirt".equals(block.getString("Name"))) {
+                block.setString("Name", "minecraft:diamond_block");
+            }
+        }
+    }
+}
+```
+
+**Copy chunk data:**
+```java
+Optional<IChunk> targetChunk = region.getChunk(1, 1);
+if (targetChunk.isPresent()) {
+    targetChunk.get().setNBTData(chunk.getNBTData());
+}
+```
+
+**Write modified region:**
+```java
+AnvilWriter writer = new AnvilWriter();
+writer.writeRegion(region, new File("r.0.0-updated.mca"));
+```
+
+**Find chunks with entities:**
+```java
+List<Chunk> ownableChunks = region.getChunksWithOwnables();
+for (Chunk chunk : ownableChunks) {
+    System.out.println("Chunk at " + chunk.getChunkX() + ", " + chunk.getChunkZ());
+}
+```
+
+## 📋 Status
+
+### ✅ Supported
+- Complete CRUD operations (Create, Read, Update, Delete)
+- Compression formats: **GZIP**, **ZLIB**, **None**
+- Chunk Management: Coordinate extraction, payload handling, ...
+- Many convenience methods (chunkHasOwnableEntities, getChunkByCoordinates, etc.)
+
+### 🔮 Future Plans
+- Enhanced editing operations
+- LZ4 compression support
+- Bedrock Region format support
+- Alpha Level format support
+- Graphical interface (maybe!)
+
+## 📖 Documentation
+
+Explore the `examples/` folder for comprehensive usage patterns.
+
+## 📦 Building
+```bash
+mvn clean package
+```
+
+## ⚠️ Important Notice
+
+**Always backup your world files before modification.** While thoroughly tested, data corruption is always possible with world file manipulation tools.
+
+## 🔗 Related Projects
+
+This library will be used by:
+- [MinecraftOfflineOnlineConverter](https://github.com/paul-eff/MinecraftOfflineOnlineConverter) - Player data migration with UUID conversion
+
+Built with:
+- [jNBT](https://github.com/paul-eff/jNBT) - NBT file manipulation
+
+## 📚 References
+
+- [Region File Format](https://minecraft.wiki/w/Region_file_format)
+- [Chunk Format](https://minecraft.wiki/w/Chunk_format)
+
+## Remark
 Minecraft is a registered trademark of Mojang AB.
 

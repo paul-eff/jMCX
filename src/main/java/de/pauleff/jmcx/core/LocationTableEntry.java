@@ -21,7 +21,7 @@ public class LocationTableEntry
      * Constructs a LocationTableEntry with the specified offset and sector count.
      *
      * @param sectorOffset the sector offset where the chunk data starts
-     * @param sectorCount the number of sectors the chunk data occupies
+     * @param sectorCount  the number of sectors the chunk data occupies
      */
     private LocationTableEntry(int sectorOffset, int sectorCount)
     {
@@ -42,7 +42,7 @@ public class LocationTableEntry
 
     /**
      * Creates a LocationTableEntry from a 4-byte array representing the raw location data.
-     * 
+     * <p>
      * The byte array format is:
      * - Bytes 0-2: 24-bit big-endian sector offset
      * - Byte 3: 8-bit sector count
@@ -60,7 +60,7 @@ public class LocationTableEntry
 
         // Extract the 24-bit offset from the first 3 bytes
         int sectorOffset = AnvilUtils.readInt(Arrays.copyOfRange(locationBytes, 0, 3), ByteOrder.BIG_ENDIAN);
-        
+
         // Extract the 8-bit sector count from the last byte
         int sectorCount = AnvilUtils.readInt(Arrays.copyOfRange(locationBytes, 3, 4), ByteOrder.BIG_ENDIAN);
 
@@ -69,7 +69,7 @@ public class LocationTableEntry
 
     /**
      * Converts this LocationTableEntry to a 4-byte array suitable for writing to an MCA file.
-     * 
+     * <p>
      * The byte array format is:
      * - Bytes 0-2: 24-bit big-endian sector offset
      * - Byte 3: 8-bit sector count
@@ -79,21 +79,21 @@ public class LocationTableEntry
     public byte[] toBytes()
     {
         ByteBuffer buffer = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN);
-        
+
         // Write the 24-bit offset as 3 bytes
         buffer.put((byte) ((sectorOffset >> 16) & 0xFF));
         buffer.put((byte) ((sectorOffset >> 8) & 0xFF));
         buffer.put((byte) (sectorOffset & 0xFF));
-        
+
         // Write the 8-bit sector count
         buffer.put((byte) (sectorCount & 0xFF));
-        
+
         return buffer.array();
     }
 
     /**
      * Validates that this LocationTableEntry represents a valid chunk location.
-     * 
+     * <p>
      * A valid location entry must satisfy:
      * - If not empty: sector offset >= 2 (after the 8KiB header)
      * - If not empty: sector count between 1 and 255 (inclusive)
@@ -107,14 +107,14 @@ public class LocationTableEntry
         {
             return sectorOffset == 0 && sectorCount == 0;
         }
-        
+
         // Non-empty chunks must have valid offset and sector count
         return sectorOffset >= 2 && sectorCount >= 1 && sectorCount <= 255;
     }
 
     /**
      * Calculates the total size in bytes that this chunk occupies in the MCA file.
-     * 
+     * <p>
      * This is calculated as: sector count × sector size (4096 bytes)
      *
      * @return the total size in bytes, or 0 if this is an empty entry
@@ -198,7 +198,7 @@ public class LocationTableEntry
         {
             return "LocationTableEntry{empty}";
         }
-        
+
         return "LocationTableEntry{" +
                 "sectorOffset=" + sectorOffset +
                 ", sectorCount=" + sectorCount +

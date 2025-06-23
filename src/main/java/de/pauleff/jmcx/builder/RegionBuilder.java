@@ -1,14 +1,11 @@
 package de.pauleff.jmcx.builder;
 
+import de.pauleff.jmcx.api.AnvilFactory;
 import de.pauleff.jmcx.api.IChunk;
 import de.pauleff.jmcx.api.IRegion;
-import de.pauleff.jmcx.api.AnvilFactory;
-import de.pauleff.jmcx.core.Region;
 import de.pauleff.jmcx.core.Chunk;
 import de.pauleff.jmcx.core.Location;
-
-import static de.pauleff.jmcx.util.AnvilConstants.CHUNKS_PER_REGION;
-import static de.pauleff.jmcx.util.AnvilConstants.CHUNKS_PER_REGION_SIDE;
+import de.pauleff.jmcx.core.Region;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,15 +14,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static de.pauleff.jmcx.util.AnvilConstants.CHUNKS_PER_REGION;
+import static de.pauleff.jmcx.util.AnvilConstants.CHUNKS_PER_REGION_SIDE;
+
 /**
  * Builder class for creating Region objects using the builder pattern.
  * Provides a fluent API for constructing regions with chunks.
  */
 public class RegionBuilder
 {
+    private final Map<Integer, IChunk> chunks = new HashMap<>();
     private int regionX;
     private int regionZ;
-    private final Map<Integer, IChunk> chunks = new HashMap<>();
     private boolean validateChunks = true;
 
     private RegionBuilder()
@@ -52,13 +52,13 @@ public class RegionBuilder
     public static RegionBuilder fromFile(File file) throws IOException
     {
         RegionBuilder builder = new RegionBuilder();
-        
+
         try (var reader = AnvilFactory.createReader(file))
         {
             IRegion region = reader.readRegion();
             builder.regionX = region.getX();
             builder.regionZ = region.getZ();
-            
+
             for (IChunk chunk : region.getChunks())
             {
                 if (!chunk.isEmpty())
@@ -67,7 +67,7 @@ public class RegionBuilder
                 }
             }
         }
-        
+
         return builder;
     }
 
@@ -228,24 +228,23 @@ public class RegionBuilder
      * Builds the Region object from the configured chunks.
      *
      * @return a new Region instance
-     * @throws IOException if an error occurs during region construction
+     * @throws IOException           if an error occurs during region construction
      * @throws IllegalStateException if the builder is in an invalid state
      */
     public IRegion build() throws IOException
     {
         validateBuilder();
-        
+
         // Create a list of all CHUNKS_PER_REGION chunks (empty chunks for missing ones)
         List<IChunk> allChunks = new ArrayList<>(CHUNKS_PER_REGION);
-        
+
         for (int i = 0; i < CHUNKS_PER_REGION; i++)
         {
             IChunk chunk = chunks.get(i);
             if (chunk != null)
             {
                 allChunks.add(chunk);
-            }
-            else
+            } else
             {
                 // Create empty chunk for missing slots
                 Location emptyLocation = Location.createEmptyLocation();
@@ -253,7 +252,7 @@ public class RegionBuilder
                 allChunks.add(emptyChunk);
             }
         }
-        
+
         return new Region(regionX, regionZ, allChunks);
     }
 
@@ -282,14 +281,14 @@ public class RegionBuilder
     {
         int expectedRegionX = chunk.getX() / CHUNKS_PER_REGION_SIDE; // chunk.getX() / 32
         int expectedRegionZ = chunk.getZ() / CHUNKS_PER_REGION_SIDE; // chunk.getZ() / 32
-        
+
         if (expectedRegionX != regionX || expectedRegionZ != regionZ)
         {
             throw new IllegalArgumentException(
-                String.format("Chunk at (%d, %d) does not belong to region (%d, %d). " +
-                             "Expected region: (%d, %d)", 
-                             chunk.getX(), chunk.getZ(), regionX, regionZ, 
-                             expectedRegionX, expectedRegionZ)
+                    String.format("Chunk at (%d, %d) does not belong to region (%d, %d). " +
+                                    "Expected region: (%d, %d)",
+                            chunk.getX(), chunk.getZ(), regionX, regionZ,
+                            expectedRegionX, expectedRegionZ)
             );
         }
     }

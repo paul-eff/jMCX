@@ -1,23 +1,19 @@
 package de.pauleff.jmcx.core;
 
 import de.pauleff.jmcx.api.IChunk;
-
-import static de.pauleff.jmcx.util.AnvilConstants.CHUNKS_PER_REGION_SIDE;
-import static de.pauleff.jmcx.util.AnvilConstants.BLOCKS_PER_CHUNK_SIDE;
 import de.pauleff.jnbt.api.ICompoundTag;
 import de.pauleff.jnbt.formats.binary.NBTReader;
 import de.pauleff.jnbt.formats.binary.NBTWriter;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
+
+import static de.pauleff.jmcx.util.AnvilConstants.BLOCKS_PER_CHUNK_SIDE;
+import static de.pauleff.jmcx.util.AnvilConstants.CHUNKS_PER_REGION_SIDE;
 
 /**
  * The Chunk class represents a chunk in the Anvil file format.
  * Uses jNBT library for type-safe NBT data handling.
- * 
+ *
  * @author Paul Ferlitz
  */
 public class Chunk implements IChunk
@@ -47,7 +43,7 @@ public class Chunk implements IChunk
         this.location = location;
         this.timestamp = timestamp;
         this.payload = new ChunkPayload(payload);
-        
+
         // Parse coordinates and data version from NBT data
         if (this.payload.getLength() > 0)
         {
@@ -62,24 +58,7 @@ public class Chunk implements IChunk
             this.dataVersion = 0;
         }
     }
-    
-    /**
-     * Simple data class to hold coordinate and version data.
-     */
-    private static class CoordinateData
-    {
-        final int x;
-        final int z;
-        final int dataVersion;
-        
-        CoordinateData(int x, int z, int dataVersion)
-        {
-            this.x = x;
-            this.z = z;
-            this.dataVersion = dataVersion;
-        }
-    }
-    
+
     /**
      * Parses coordinates and data version from NBT without caching the full NBT data.
      */
@@ -91,7 +70,7 @@ public class Chunk implements IChunk
             ICompoundTag root = reader.read();
 
             int x, z, dataVersion;
-            
+
             // Check for entity file format (Position tag)
             if (root.hasTag("Position"))
             {
@@ -138,7 +117,7 @@ public class Chunk implements IChunk
             {
                 throw new IOException("Invalid chunk format: missing DataVersion tag");
             }
-            
+
             return new CoordinateData(x, z, dataVersion);
         }
     }
@@ -167,36 +146,13 @@ public class Chunk implements IChunk
         {
             return null;
         }
-        
+
         if (!nbtLoaded)
         {
             loadNBTData();
         }
-        
+
         return cachedNBTData;
-    }
-    
-    /**
-     * Loads and caches the NBT data.
-     */
-    private void loadNBTData() throws IOException
-    {
-        try (DataInputStream inputStream = new DataInputStream(new ByteArrayInputStream(this.payload.getDecompressedData()));
-             NBTReader reader = new NBTReader(inputStream))
-        {
-            cachedNBTData = reader.read();
-            nbtLoaded = true;
-        }
-    }
-    
-    /**
-     * Checks if NBT data has been loaded into memory.
-     *
-     * @return true if NBT data is currently loaded
-     */
-    public boolean isNBTLoaded()
-    {
-        return nbtLoaded;
     }
 
     /**
@@ -215,10 +171,33 @@ public class Chunk implements IChunk
         }
         byte[] nbtBytes = byteOutput.toByteArray();
         setChunkData(nbtBytes);
-        
+
         // Update cached data
         cachedNBTData = nbtData;
         nbtLoaded = true;
+    }
+
+    /**
+     * Loads and caches the NBT data.
+     */
+    private void loadNBTData() throws IOException
+    {
+        try (DataInputStream inputStream = new DataInputStream(new ByteArrayInputStream(this.payload.getDecompressedData()));
+             NBTReader reader = new NBTReader(inputStream))
+        {
+            cachedNBTData = reader.read();
+            nbtLoaded = true;
+        }
+    }
+
+    /**
+     * Checks if NBT data has been loaded into memory.
+     *
+     * @return true if NBT data is currently loaded
+     */
+    public boolean isNBTLoaded()
+    {
+        return nbtLoaded;
     }
 
     /**
@@ -395,5 +374,22 @@ public class Chunk implements IChunk
                 ", timestamp=" + timestamp +
                 ", chunkData (Bytes)=" + payload.getLength() +
                 '}';
+    }
+
+    /**
+     * Simple data class to hold coordinate and version data.
+     */
+    private static class CoordinateData
+    {
+        final int x;
+        final int z;
+        final int dataVersion;
+
+        CoordinateData(int x, int z, int dataVersion)
+        {
+            this.x = x;
+            this.z = z;
+            this.dataVersion = dataVersion;
+        }
     }
 }

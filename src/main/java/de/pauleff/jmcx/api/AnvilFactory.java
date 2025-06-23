@@ -3,10 +3,10 @@ package de.pauleff.jmcx.api;
 import de.pauleff.jmcx.formats.anvil.AnvilReader;
 import de.pauleff.jmcx.formats.anvil.AnvilWriter;
 
-import static de.pauleff.jmcx.util.AnvilConstants.MCA_EXTENSION;
-
 import java.io.File;
 import java.io.IOException;
+
+import static de.pauleff.jmcx.util.AnvilConstants.MCA_EXTENSION;
 
 /**
  * Factory class for creating Anvil file readers and writers.
