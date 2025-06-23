@@ -1,8 +1,8 @@
-# jMCX v0.9.0 BETA
+# jMCX v1.0.0
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-0.9.0%20BETA-blue)
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
 ![Minecraft](https://img.shields.io/badge/minecraft-1.21.5(Java)-green)
 ![Java](https://img.shields.io/badge/java-21-red)
 ![License](https://img.shields.io/badge/license-MIT-brightgreen)
