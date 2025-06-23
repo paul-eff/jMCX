@@ -58,7 +58,11 @@ public class Chunk implements IChunk
     }
 
     /**
-     * Parses coordinates and data version from NBT without caching.
+     * Parses coordinates and data version from NBT data without caching the result.
+     * Handles different chunk types: regular chunks (xPos/zPos), entities (Position), and POI (pos).
+     *
+     * @return {@link CoordinateData} containing x, z coordinates and data version
+     * @throws IOException if NBT data is malformed or missing required tags
      */
     private CoordinateData parseCoordinatesAndVersion() throws IOException
     {
@@ -170,7 +174,10 @@ public class Chunk implements IChunk
     }
 
     /**
-     * Loads and caches NBT data.
+     * Loads NBT data from chunk payload and caches it in memory.
+     * Uses {@link NBTReader} to parse decompressed chunk data.
+     *
+     * @throws IOException if reading or parsing NBT data fails
      */
     private void loadNBTData() throws IOException
     {
@@ -327,6 +334,11 @@ public class Chunk implements IChunk
         return new int[]{chunkX, chunkZ};
     }
 
+    /**
+     * Gets the range of block coordinates covered by this chunk.
+     *
+     * @return array containing [startX, startZ, endX, endZ] block coordinates
+     */
     @Override
     public int[] getBlockCoordinateRange()
     {
@@ -337,6 +349,11 @@ public class Chunk implements IChunk
         return new int[]{startX, startZ, endX, endZ};
     }
 
+    /**
+     * Checks if chunk is empty (has no payload data).
+     *
+     * @return true if chunk has no data, false otherwise
+     */
     @Override
     public boolean isEmpty()
     {

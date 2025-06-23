@@ -75,6 +75,13 @@ public class Region implements IRegion
         }
     }
 
+    /**
+     * Replaces a chunk in this region with the provided chunk.
+     *
+     * @param chunk the {@link IChunk} to replace (must be instance of {@link Chunk})
+     * @throws IOException if I/O error occurs
+     * @throws IllegalArgumentException if chunk is not instance of Chunk or coordinates don't belong to this region
+     */
     @Override
     public void replaceChunk(IChunk chunk) throws IOException
     {
@@ -169,6 +176,13 @@ public class Region implements IRegion
         return chunks;
     }
 
+    /**
+     * Gets the chunk at the specified coordinates if it exists and belongs to this region.
+     *
+     * @param chunkX chunk x-coordinate
+     * @param chunkZ chunk z-coordinate
+     * @return {@link Optional} containing the {@link IChunk} if found, empty otherwise
+     */
     @Override
     public Optional<IChunk> getChunk(int chunkX, int chunkZ)
     {
@@ -200,6 +214,12 @@ public class Region implements IRegion
         return Optional.empty();
     }
 
+    /**
+     * Gets all chunks in this region that contain ownable entities (entities with Owner or Target NBT tags).
+     *
+     * @return list of {@link IChunk} objects containing ownable entities
+     * @throws IOException if I/O error occurs while checking chunk data
+     */
     @Override
     public List<IChunk> getChunksWithOwnables() throws IOException
     {
@@ -214,6 +234,12 @@ public class Region implements IRegion
         return chunksWithOwnables;
     }
 
+    /**
+     * Checks if the given chunk belongs to this region based on its coordinates.
+     *
+     * @param chunk the {@link IChunk} to check
+     * @return true if chunk belongs to this region, false otherwise
+     */
     @Override
     public boolean chunkInRegion(IChunk chunk)
     {
@@ -225,6 +251,13 @@ public class Region implements IRegion
         return chunkRegionCoordinates[0] == this.x && chunkRegionCoordinates[1] == this.z;
     }
 
+    /**
+     * Checks if chunk coordinates fall within this region's boundaries.
+     *
+     * @param chunkX chunk x-coordinate
+     * @param chunkZ chunk z-coordinate
+     * @return true if coordinates are within region boundaries, false otherwise
+     */
     @Override
     public boolean containsChunk(int chunkX, int chunkZ)
     {
@@ -237,6 +270,11 @@ public class Region implements IRegion
                 chunkZ >= regionStartZ && chunkZ <= regionEndZ;
     }
 
+    /**
+     * Gets the starting block coordinates (bottom-left corner) of this region.
+     *
+     * @return array containing [x, z] block coordinates of region start
+     */
     @Override
     public int[] getStartingBlockCoordinates()
     {
@@ -245,6 +283,11 @@ public class Region implements IRegion
         return new int[]{regionX, regionZ};
     }
 
+    /**
+     * Gets the full block coordinate range covered by this region.
+     *
+     * @return array containing [startX, startZ, endX, endZ] block coordinates
+     */
     @Override
     public int[] getBlockCoordinateRange()
     {

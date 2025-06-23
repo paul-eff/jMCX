@@ -89,14 +89,14 @@ public class ChunkBuilder
     /**
      * Sets the chunk coordinates.
      *
-     * @param x chunk X coordinate
-     * @param z chunk Z coordinate
+     * @param chunkX chunk X coordinate
+     * @param chunkZ chunk Z coordinate
      * @return this builder
      */
-    public ChunkBuilder withCoordinates(int x, int z)
+    public ChunkBuilder withCoordinates(int chunkX, int chunkZ)
     {
-        this.chunkX = x;
-        this.chunkZ = z;
+        this.chunkX = chunkX;
+        this.chunkZ = chunkZ;
         this.xExplicitlySet = true;
         this.zExplicitlySet = true;
         return this;

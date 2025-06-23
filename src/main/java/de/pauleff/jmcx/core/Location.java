@@ -46,6 +46,11 @@ public class Location
         return offset;
     }
 
+    /**
+     * Sets offset of location.
+     *
+     * @param offset the offset to set
+     */
     public void setOffset(int offset)
     {
         this.offset = offset;
@@ -61,6 +66,11 @@ public class Location
         return sectorCount;
     }
 
+    /**
+     * Sets sector count of location.
+     *
+     * @param sectorCount the sector count to set
+     */
     public void setSectorCount(int sectorCount)
     {
         this.sectorCount = sectorCount;

@@ -68,6 +68,13 @@ public class ChunkPayload
         }
     }
 
+    /**
+     * Compresses data using current compression type and updates internal state.
+     *
+     * @param data uncompressed chunk data
+     * @throws IOException if compression fails
+     * @throws ChunkTooLargeException if compressed data exceeds limits
+     */
     protected void compressAndSetData(byte[] data) throws IOException
     {
         if (data.length > MAX_CHUNK_SIZE_BYTES)
@@ -119,6 +126,11 @@ public class ChunkPayload
         return payloadLength;
     }
 
+    /**
+     * Sets payload length with sector alignment.
+     *
+     * @param payloadLength payload length in bytes
+     */
     private void setPayloadLength(int payloadLength)
     {
         this.payloadLength = payloadLength;
@@ -134,6 +146,11 @@ public class ChunkPayload
         return length;
     }
 
+    /**
+     * Sets length of compressed chunk data.
+     *
+     * @param length data length in bytes
+     */
     private void setLength(int length)
     {
         this.length = length;

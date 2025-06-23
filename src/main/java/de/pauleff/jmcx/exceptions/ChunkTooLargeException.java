@@ -12,11 +12,11 @@ public class ChunkTooLargeException extends RuntimeException
     /**
      * Constructs a ChunkTooLargeException with a size-based message.
      *
-     * @param size the size that exceeded the limit
+     * @param dataSize the size that exceeded the limit
      */
-    public ChunkTooLargeException(int size)
+    public ChunkTooLargeException(int dataSize)
     {
-        super(String.format("Chunks written to MCA files cannot exceed the size of 1MiB (" + MAX_CHUNK_SIZE_FORMATTED + ")! Tried to write %d bytes.", size));
+        super(String.format("Chunks written to MCA files cannot exceed the size of 1MiB (" + MAX_CHUNK_SIZE_FORMATTED + ")! Tried to write %d bytes.", dataSize));
     }
 
     /**

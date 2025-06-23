@@ -21,24 +21,24 @@ public final class AnvilFactory
     /**
      * Creates a reader for the specified file.
      *
-     * @param file .mca file to read
+     * @param anvilFile .mca file to read
      * @return new {@link IAnvilReader} instance
      * @throws IOException if file access fails
      * @throws IllegalArgumentException if file format unsupported
      */
-    public static IAnvilReader createReader(File file) throws IOException
+    public static IAnvilReader createReader(File anvilFile) throws IOException
     {
-        if (file == null)
+        if (anvilFile == null)
         {
             throw new IllegalArgumentException("File cannot be null");
         }
 
-        if (!isValidAnvilFile(file))
+        if (!isValidAnvilFile(anvilFile))
         {
-            throw new IllegalArgumentException("Invalid or unsupported file format: " + file.getName());
+            throw new IllegalArgumentException("Invalid or unsupported file format: " + anvilFile.getName());
         }
 
-        return new AnvilReader(file);
+        return new AnvilReader(anvilFile);
     }
 
     /**
@@ -62,25 +62,25 @@ public final class AnvilFactory
     /**
      * Creates a writer for the specified file.
      *
-     * @param file .mca file to write
+     * @param anvilFile .mca file to write
      * @return new {@link IAnvilWriter} instance
      * @throws IOException if file access fails
      * @throws IllegalArgumentException if file format unsupported
      */
-    public static IAnvilWriter createWriter(File file) throws IOException
+    public static IAnvilWriter createWriter(File anvilFile) throws IOException
     {
-        if (file == null)
+        if (anvilFile == null)
         {
             throw new IllegalArgumentException("File cannot be null");
         }
 
-        FileFormat format = FileFormat.detectFormat(file);
+        FileFormat format = FileFormat.detectFormat(anvilFile);
         if (format != FileFormat.ANVIL)
         {
             throw new IllegalArgumentException("Unsupported file format for writing: " + format.getDescription());
         }
 
-        return new AnvilWriter(file);
+        return new AnvilWriter(anvilFile);
     }
 
     /**
