@@ -1,128 +1,144 @@
 package de.pauleff.jmcx.examples;
 
 import de.pauleff.jmcx.api.*;
-import de.pauleff.jmcx.builder.RegionBuilder;
 import de.pauleff.jmcx.util.ChunkFilter;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 /**
- * Simple examples showing core jMCX functionality.
- * Learn the basics: read, write, filter, and build.
+ * Simple examples showing jMCX core functionality.
+ * Demonstrates reading, writing, and basic chunk operations.
+ *
+ * @author Paul Ferlitz
  */
 public class BasicUsageExamples
 {
     /**
-     * Read an MCA file and examine its chunks.
+     * Example 1: Read and inspect a region file.
      */
-    public static void readExample() throws IOException
+    public static void readRegionExample()
     {
-        File mcaFile = new File("world/region/r.0.0.mca");
-
-        try (IAnvilReader reader = AnvilFactory.createReader(mcaFile))
+        try
         {
-            IRegion region = reader.readRegion();
-
-            System.out.println("Region (" + region.getX() + ", " + region.getZ() + ")");
-            System.out.println("Non-empty chunks: " + ChunkFilter.filterNonEmpty(region.getChunks()).size());
+            File regionFile = new File("r.0.0.mca");
+            
+            // Read the region
+            try (IAnvilReader reader = AnvilFactory.createReader(regionFile))
+            {
+                IRegion region = reader.readRegion();
+                
+                System.out.println("Region coordinates: (" + region.getX() + ", " + region.getZ() + ")");
+                
+                // Count non-empty chunks
+                List<IChunk> nonEmptyChunks = ChunkFilter.filterNonEmpty(region.getChunks());
+                System.out.println("Non-empty chunks: " + nonEmptyChunks.size() + " / 1024");
+                
+                // Get a specific chunk
+                Optional<IChunk> chunk = region.getChunk(0, 0);
+                if (chunk.isPresent())
+                {
+                    System.out.println("Chunk (0,0) data version: " + chunk.get().getDataVersion());
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            System.err.println("Could not read region: " + e.getMessage());
         }
     }
 
     /**
-     * Write a region to a new file.
+     * Example 2: Copy a region file to a new location.
      */
-    public static void writeExample() throws IOException
+    public static void copyRegionExample()
     {
-        File inputFile = new File("world/region/r.0.0.mca");
-        File outputFile = new File("world/region/r.0.0_copy.mca");
-
-        // Read region
-        IRegion region;
-        try (IAnvilReader reader = AnvilFactory.createReader(inputFile))
+        try
         {
-            region = reader.readRegion();
+            File sourceFile = new File("r.0.0.mca");
+            File targetFile = new File("r.0.0_backup.mca");
+            
+            // Read source region
+            IRegion region;
+            try (IAnvilReader reader = AnvilFactory.createReader(sourceFile))
+            {
+                region = reader.readRegion();
+            }
+            
+            // Write to target file
+            try (IAnvilWriter writer = AnvilFactory.createWriter(targetFile))
+            {
+                writer.writeRegion(region);
+                System.out.println("Region copied successfully");
+            }
         }
-
-        // Write region
-        try (IAnvilWriter writer = AnvilFactory.createWriter(outputFile))
+        catch (IOException e)
         {
-            writer.writeRegion(region);
-        }
-    }
-
-    /**
-     * Filter chunks by different criteria.
-     */
-    public static void filterExample() throws IOException
-    {
-        File mcaFile = new File("world/region/r.0.0.mca");
-
-        try (IAnvilReader reader = AnvilFactory.createReader(mcaFile))
-        {
-            IRegion region = reader.readRegion();
-            List<IChunk> chunks = region.getChunks();
-
-            // Filter by data version (modern chunks 1.21.5-1.21.6 Release Candidate 1)
-            List<IChunk> modernChunks = ChunkFilter.filterByDataVersion(chunks, 4325, 4434);
-
-            // Filter by coordinates (spawn area)
-            List<IChunk> spawnChunks = ChunkFilter.filterByCoordinateRange(chunks, -5, -5, 5, 5);
-
-            // Filter chunks with entities that have owners
-            List<IChunk> ownableChunks = ChunkFilter.filterWithOwnables(chunks);
-
-            System.out.println("Modern chunks: " + modernChunks.size());
-            System.out.println("Spawn area chunks: " + spawnChunks.size());
-            System.out.println("Chunks with ownables: " + ownableChunks.size());
+            System.err.println("Could not copy region: " + e.getMessage());
         }
     }
 
     /**
-     * Build a new region programmatically.
+     * Example 3: Filter chunks by different criteria.
      */
-    public static void buildExample() throws IOException
+    public static void filterChunksExample()
     {
-        // Create new region from scratch
-        IRegion newRegion = RegionBuilder.create()
-                .withCoordinates(0, 0)
-                .addEmptyChunk(0, 0)  // Chunk (0,0) belongs to region (0,0)
-                .build();
-
-        // Or load and modify existing region
-        File existingFile = new File("world/region/r.0.0.mca");
-        if (existingFile.exists())
+        try
         {
-            IRegion modifiedRegion = RegionBuilder.fromFile(existingFile)
-                    .addEmptyChunk(15, 15)
-                    .build();
-
-            System.out.println("Modified region has " +
-                    ChunkFilter.filterNonEmpty(modifiedRegion.getChunks()).size() + " chunks");
+            File regionFile = new File("r.0.0.mca");
+            
+            try (IAnvilReader reader = AnvilFactory.createReader(regionFile))
+            {
+                IRegion region = reader.readRegion();
+                List<IChunk> allChunks = region.getChunks();
+                
+                // Filter by coordinate range (spawn area)
+                List<IChunk> spawnChunks = ChunkFilter.filterByCoordinateRange(allChunks, 0, 0, 15, 15);
+                System.out.println("Chunks in spawn area (0,0 to 15,15): " + spawnChunks.size());
+                
+                // Filter chunks with ownable entities
+                List<IChunk> ownableChunks = ChunkFilter.filterWithOwnables(allChunks);
+                System.out.println("Chunks with ownable entities: " + ownableChunks.size());
+                
+                // Filter by data version (Minecraft 1.21+)
+                List<IChunk> modernChunks = ChunkFilter.filterByDataVersion(allChunks, 4000, 5000);
+                System.out.println("Modern chunks (1.21+): " + modernChunks.size());
+            }
+        }
+        catch (IOException e)
+        {
+            System.err.println("Could not filter chunks: " + e.getMessage());
         }
     }
 
     public static void main(String[] args)
     {
-        System.out.println("jMCX Basic Examples");
-        System.out.println("===================");
-
-        try
+        System.out.println("jMCX Basic Usage Examples");
+        System.out.println("=========================");
+        System.out.println();
+        
+        System.out.println("Note: These examples expect an MCA file named 'r.0.0.mca' in the current directory.");
+        System.out.println("Copy an MCA file from your world/region/ folder to test these examples.");
+        System.out.println();
+        
+        File testFile = new File("r.0.0.mca");
+        if (!testFile.exists())
         {
-            // These examples require actual MCA files to work
-            // Comment out if you don't have world files
-            /*
-            readExample();
-            writeExample(); 
-            filterExample();
-            */
-
-            buildExample();
-
-        } catch (Exception e)
-        {
-            System.err.println("Error: " + e.getMessage());
+            System.out.println("No test file found. Please copy an MCA file to 'r.0.0.mca' to run examples.");
+            return;
         }
+        
+        System.out.println("Example 1: Reading a region file");
+        readRegionExample();
+        System.out.println();
+        
+        System.out.println("Example 2: Copying a region file");
+        copyRegionExample();
+        System.out.println();
+        
+        System.out.println("Example 3: Filtering chunks");
+        filterChunksExample();
     }
 }
