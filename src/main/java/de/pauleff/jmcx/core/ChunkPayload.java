@@ -192,6 +192,7 @@ public class ChunkPayload
      */
     public byte[] decompressData(byte[] data, byte compressionType) throws IOException
     {
+        // TODO: Implement this as enum
         try (ByteArrayInputStream byteStream = new ByteArrayInputStream(data))
         {
             switch (compressionType)

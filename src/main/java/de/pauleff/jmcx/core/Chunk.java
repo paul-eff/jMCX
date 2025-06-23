@@ -379,17 +379,7 @@ public class Chunk implements IChunk
     /**
      * Simple data class to hold coordinate and version data.
      */
-    private static class CoordinateData
+    private record CoordinateData(int x, int z, int dataVersion)
     {
-        final int x;
-        final int z;
-        final int dataVersion;
-
-        CoordinateData(int x, int z, int dataVersion)
-        {
-            this.x = x;
-            this.z = z;
-            this.dataVersion = dataVersion;
-        }
     }
 }
