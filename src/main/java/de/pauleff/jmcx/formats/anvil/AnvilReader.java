@@ -21,19 +21,16 @@ import java.util.Optional;
 import static de.pauleff.jmcx.util.AnvilConstants.*;
 
 /**
- * The AnvilReader class is responsible for reading Anvil region files.
- * Currently supports .mca (Anvil format) files only.
- * Future versions may include .mcr (McRegion format) support.
+ * Implementation of {@link IAnvilReader} for reading Anvil region files.
  *
  * @author Paul Ferlitz
  */
 public class AnvilReader implements IAnvilReader
 {
-    // MCA file format constants
-    private static final int HEADER_SIZE = SECTOR_SIZE_BYTES + SECTOR_SIZE_BYTES; // 8KiB total header
-    private static final int LOCATION_ENTRY_SIZE = 4; // 4 bytes per location entry
-    private static final int TIMESTAMP_ENTRY_SIZE = 4; // 4 bytes per timestamp entry
-    private static final int MINIMUM_SECTOR_OFFSET = 2; // Sectors 0-1 reserved for header
+    private static final int HEADER_SIZE = SECTOR_SIZE_BYTES + SECTOR_SIZE_BYTES;
+    private static final int LOCATION_ENTRY_SIZE = 4;
+    private static final int TIMESTAMP_ENTRY_SIZE = 4;
+    private static final int MINIMUM_SECTOR_OFFSET = 2;
 
     private final File anvilFile;
     private final RandomAccessFile raf;
@@ -41,9 +38,8 @@ public class AnvilReader implements IAnvilReader
     /**
      * Constructs an AnvilReader object.
      *
-     * @param anvilFile the Anvil file to read (.mca format)
-     * @throws IOException              if an I/O error occurs
-     * @throws IllegalArgumentException if the file format is not supported
+     * @param anvilFile the Anvil file to read
+     * @throws IOException if I/O error occurs or file format unsupported
      */
     public AnvilReader(File anvilFile) throws IOException
     {
@@ -54,11 +50,10 @@ public class AnvilReader implements IAnvilReader
     }
 
     /**
-     * Reads the whole Anvil file and returns a Region object.
-     * The created RandomAccessFile will be closed after completion.
+     * Reads the complete region from file.
      *
-     * @return the Region object representing the region in the Anvil file
-     * @throws IOException if an I/O error occurs
+     * @return {@link IRegion} representing the region
+     * @throws IOException if I/O error occurs
      */
     @Override
     public IRegion readRegion() throws IOException
@@ -73,19 +68,24 @@ public class AnvilReader implements IAnvilReader
         }
     }
 
+    /**
+     * Reads a specific chunk from the region.
+     *
+     * @param chunkX chunk X coordinate
+     * @param chunkZ chunk Z coordinate
+     * @return {@link IChunk} if exists, empty otherwise
+     * @throws IOException if I/O error occurs
+     */
     @Override
     public Optional<IChunk> readChunk(int chunkX, int chunkZ) throws IOException
     {
         try
         {
-            // Calculate chunk index within the region
             int chunkIndex = AnvilUtils.chunkCoordinatesToIndex(chunkX, chunkZ);
 
-            // Read location and timestamp for this specific chunk
             Location location = readChunkLocation(chunkIndex);
             int timestamp = readChunkTimestamp(chunkIndex);
 
-            // If chunk doesn't exist (offset is 0), return empty
             if (location.getOffset() == 0)
             {
                 return Optional.empty();
@@ -93,21 +93,16 @@ public class AnvilReader implements IAnvilReader
 
             try
             {
-                // Read and validate chunk data with recovery
                 byte[] chunkData = readAndValidateChunkData(location);
-
-                // Create and return chunk
                 Chunk chunk = new Chunk(chunkIndex, location, timestamp, chunkData);
                 return Optional.of(chunk);
             } catch (IOException | RuntimeException corruptionException)
             {
-                // Log corruption details but return empty instead of throwing
                 System.err.printf("Warning: Corrupt chunk at coordinates (%d,%d), index %d: %s%n",
                         chunkX, chunkZ, chunkIndex, corruptionException.getMessage());
                 System.err.printf("  Location: offset=%d, sectorCount=%d, timestamp=%d%n",
                         location.getOffset(), location.getSectorCount(), timestamp);
 
-                // Return empty instead of corrupt data
                 return Optional.empty();
             }
         } catch (Exception e)
@@ -119,30 +114,56 @@ public class AnvilReader implements IAnvilReader
     }
 
 
+    /**
+     * Gets region coordinates from filename.
+     *
+     * @return [regionX, regionZ] coordinates
+     */
     @Override
     public int[] getRegionCoordinates()
     {
         return parseFilenameToCoordinates(anvilFile.getName());
     }
 
+    /**
+     * Gets absolute file path.
+     *
+     * @return absolute file path
+     */
     @Override
     public String getFilePath()
     {
         return anvilFile.getAbsolutePath();
     }
 
+    /**
+     * Checks if file can be read.
+     *
+     * @return true if file exists and is readable
+     */
     @Override
     public boolean canRead()
     {
         return anvilFile.exists() && anvilFile.canRead();
     }
 
+    /**
+     * Gets file size in bytes.
+     *
+     * @return file size
+     * @throws IOException if I/O error occurs
+     */
     @Override
     public long getFileSize() throws IOException
     {
         return anvilFile.length();
     }
 
+    /**
+     * Closes the file reader.
+     *
+     * @throws IOException if I/O error occurs
+     */
     @Override
     public void close() throws IOException
     {
@@ -161,7 +182,6 @@ public class AnvilReader implements IAnvilReader
     {
         long fileSize = raf.length();
 
-        // Validate minimum file size (must have 8KiB header)
         if (fileSize < HEADER_SIZE)
         {
             throw new IOException(
@@ -170,7 +190,6 @@ public class AnvilReader implements IAnvilReader
             );
         }
 
-        // Validate header structure (8KiB = 2 sectors exactly)
         if (HEADER_SIZE != 2 * SECTOR_SIZE_BYTES)
         {
             throw new IOException(
@@ -179,7 +198,6 @@ public class AnvilReader implements IAnvilReader
             );
         }
 
-        // Validate file size is sector-aligned
         if (fileSize % SECTOR_SIZE_BYTES != 0)
         {
             throw new IOException(
@@ -188,7 +206,6 @@ public class AnvilReader implements IAnvilReader
             );
         }
 
-        // Validate file size is reasonable (not exceeding practical limits)
         long maxReasonableFileSize = 256L * 1024 * 1024; // 256MB
         if (fileSize > maxReasonableFileSize)
         {
@@ -198,8 +215,6 @@ public class AnvilReader implements IAnvilReader
             );
         }
 
-        // Additional header structure validation will be performed during reading
-        // since we need to validate the location table entries
     }
 
     /**
@@ -212,13 +227,10 @@ public class AnvilReader implements IAnvilReader
      */
     private IRegion readRegionWithValidation(int regionX, int regionZ) throws IOException
     {
-        // Read and validate location table
         Location[] locations = readAndValidateLocationTable();
 
-        // Read timestamp table
         int[] timestamps = readTimestampTable();
 
-        // Create chunks array with validation
         java.util.List<IChunk> chunks = new java.util.ArrayList<>(CHUNKS_PER_REGION);
 
         int corruptChunkCount = 0;
@@ -230,18 +242,15 @@ public class AnvilReader implements IAnvilReader
 
             if (location.getOffset() == 0)
             {
-                // Chunk doesn't exist - create empty chunk
                 chunks.add(new Chunk(i, Location.createEmptyLocation(), 0, new byte[0]));
             } else
             {
                 try
                 {
-                    // Read and validate chunk data with recovery mechanisms
                     byte[] chunkData = readAndValidateChunkData(location);
                     chunks.add(new Chunk(i, location, timestamp, chunkData));
                 } catch (IOException | RuntimeException e)
                 {
-                    // Handle corrupt chunk gracefully
                     corruptChunkCount++;
                     int chunkX = regionX * 32 + (i % 32);
                     int chunkZ = regionZ * 32 + (i / 32);
@@ -249,10 +258,8 @@ public class AnvilReader implements IAnvilReader
                     System.err.printf("Warning: Corrupt chunk at index %d (chunk coordinates %d,%d): %s%n",
                             i, chunkX, chunkZ, e.getMessage());
 
-                    // Create empty chunk as replacement for corrupt chunk
                     chunks.add(new Chunk(i, Location.createEmptyLocation(), 0, new byte[0]));
 
-                    // Log detailed error information
                     System.err.printf("  Location: offset=%d, sectorCount=%d%n",
                             location.getOffset(), location.getSectorCount());
                     System.err.printf("  Timestamp: %d%n", timestamp);
@@ -284,11 +291,10 @@ public class AnvilReader implements IAnvilReader
         Location[] locations = new Location[CHUNKS_PER_REGION];
         long fileSize = raf.length();
 
-        raf.seek(0); // Start at beginning of file
+        raf.seek(0);
 
         for (int i = 0; i < CHUNKS_PER_REGION; i++)
         {
-            // Read 4-byte location entry
             byte[] locationBytes = new byte[LOCATION_ENTRY_SIZE];
             int bytesRead = raf.read(locationBytes);
 
@@ -300,7 +306,6 @@ public class AnvilReader implements IAnvilReader
                 );
             }
 
-            // Parse location using AnvilUtils methods
             Location location = parseAndValidateLocation(locationBytes, i, fileSize);
             locations[i] = location;
         }
@@ -319,18 +324,14 @@ public class AnvilReader implements IAnvilReader
      */
     private Location parseAndValidateLocation(byte[] locationBytes, int chunkIndex, long fileSize) throws IOException
     {
-        // Extract offset (first 3 bytes) and sector count (last byte) using Arrays.copyOfRange
         byte[] offsetBytes = Arrays.copyOfRange(locationBytes, 0, 3);
         byte[] sectorCountBytes = Arrays.copyOfRange(locationBytes, 3, 4);
 
-        // Use AnvilUtils.readInt to parse values
         int offset = AnvilUtils.readInt(offsetBytes, ByteOrder.BIG_ENDIAN);
         int sectorCount = AnvilUtils.readInt(sectorCountBytes, ByteOrder.BIG_ENDIAN);
 
-        // Validate offset and sector count
-        if (offset != 0) // Only validate non-empty chunks
+        if (offset != 0)
         {
-            // Validate minimum sector offset (strict MCA format)
             if (offset < MINIMUM_SECTOR_OFFSET)
             {
                 throw new IOException(
@@ -339,7 +340,6 @@ public class AnvilReader implements IAnvilReader
                 );
             }
 
-            // Validate sector count limits (strict MCA format)
             if (sectorCount <= 0 || sectorCount > 255)
             {
                 throw new IOException(
@@ -348,7 +348,6 @@ public class AnvilReader implements IAnvilReader
                 );
             }
 
-            // Validate 3-byte offset limit (strict MCA format)
             if (offset > 0xFFFFFF) // 24-bit limit
             {
                 throw new IOException(
@@ -357,7 +356,6 @@ public class AnvilReader implements IAnvilReader
                 );
             }
 
-            // Validate chunk placement within file bounds
             if (!AnvilUtils.isValidChunkPlacement(offset, sectorCount, fileSize))
             {
                 throw new IOException(
@@ -366,7 +364,6 @@ public class AnvilReader implements IAnvilReader
                 );
             }
 
-            // Validate sector alignment (strict MCA format)
             long chunkStart = (long) offset * SECTOR_SIZE_BYTES;
             if (chunkStart % SECTOR_SIZE_BYTES != 0)
             {
@@ -377,7 +374,6 @@ public class AnvilReader implements IAnvilReader
             }
         } else if (sectorCount != 0)
         {
-            // Strict validation: empty chunks must have zero sector count
             throw new IOException(
                     String.format("Invalid chunk %d: empty chunk (offset=0) must have sector count 0, got %d",
                             chunkIndex, sectorCount)
@@ -397,7 +393,6 @@ public class AnvilReader implements IAnvilReader
     {
         int[] timestamps = new int[CHUNKS_PER_REGION];
 
-        // Seek to timestamp table (after location table)
         raf.seek(SECTOR_SIZE_BYTES);
 
         for (int i = 0; i < CHUNKS_PER_REGION; i++)
@@ -413,10 +408,8 @@ public class AnvilReader implements IAnvilReader
                 );
             }
 
-            // Use AnvilUtils.readInt to parse timestamp
             timestamps[i] = AnvilUtils.readInt(timestampBytes, ByteOrder.BIG_ENDIAN);
 
-            // Validate timestamp is reasonable (not negative, not too far in future)
             if (timestamps[i] < 0)
             {
                 throw new IOException(
@@ -425,12 +418,10 @@ public class AnvilReader implements IAnvilReader
                 );
             }
 
-            // Check if timestamp is reasonable (not more than 100 years in the future)
             long currentEpoch = Instant.now().getEpochSecond();
             long maxFutureEpoch = currentEpoch + (100L * 365 * 24 * 60 * 60); // 100 years
             if (timestamps[i] > maxFutureEpoch)
             {
-                // This is a warning rather than an error, as it might be a valid future timestamp
                 System.err.printf("Warning: chunk %d has timestamp %d which is more than 100 years in the future%n",
                         i, timestamps[i]);
             }
@@ -517,7 +508,6 @@ public class AnvilReader implements IAnvilReader
         int offset = location.getOffset();
         int sectorCount = location.getSectorCount();
 
-        // Calculate file position and read all sector data
         long filePosition = (long) offset * AnvilUtils.SECTOR_SIZE;
         int sectorDataSize = sectorCount * AnvilUtils.SECTOR_SIZE;
 
@@ -533,7 +523,6 @@ public class AnvilReader implements IAnvilReader
             );
         }
 
-        // Read and validate chunk length field (first 4 bytes of chunk data)
         if (sectorData.length < 4)
         {
             throw new IOException("Chunk data too small: missing length field");
@@ -542,7 +531,6 @@ public class AnvilReader implements IAnvilReader
         byte[] lengthBytes = Arrays.copyOfRange(sectorData, 0, 4);
         int chunkLength = AnvilUtils.readInt(lengthBytes, ByteOrder.BIG_ENDIAN);
 
-        // Validate chunk length
         if (chunkLength <= 0)
         {
             throw new IOException(
@@ -557,7 +545,6 @@ public class AnvilReader implements IAnvilReader
             );
         }
 
-        // Validate length field against actual data
         int totalChunkSize = chunkLength + 4; // +4 for length field itself
         if (totalChunkSize > sectorDataSize)
         {
@@ -567,7 +554,6 @@ public class AnvilReader implements IAnvilReader
             );
         }
 
-        // Validate sector count using AnvilUtils
         int expectedSectorCount = AnvilUtils.calculateSectorCount(totalChunkSize);
         if (sectorCount != expectedSectorCount)
         {
@@ -577,7 +563,6 @@ public class AnvilReader implements IAnvilReader
             );
         }
 
-        // Return the complete sector data (the Chunk class will handle decompression)
         return sectorData;
     }
 
@@ -599,14 +584,13 @@ public class AnvilReader implements IAnvilReader
     }
 
     /**
-     * Gets the region file format based on file extension.
+     * Gets file format.
      *
      * @return "mca" for Anvil format
      */
     @Override
     public String getFileFormat()
     {
-        // Format already validated in constructor, so we know it's mca
         return "mca";
     }
 

@@ -4,6 +4,8 @@ import java.io.File;
 
 /**
  * Enumeration of supported Anvil file formats.
+ *
+ * @author Paul Ferlitz
  */
 public enum FileFormat
 {
