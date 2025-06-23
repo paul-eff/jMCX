@@ -1,5 +1,7 @@
 package de.pauleff.jmcx.util;
 
+import de.pauleff.jmcx.core.Location;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
@@ -235,10 +237,21 @@ public class AnvilUtils
      */
     public static int calculateChunkIndex(int chunkX, int chunkZ)
     {
-        // Convert to region-local coordinates
-        int localX = chunkX % CHUNKS_PER_REGION_SIDE; // chunkX % 32
-        int localZ = chunkZ % CHUNKS_PER_REGION_SIDE; // chunkZ % 32
-        return localZ * CHUNKS_PER_REGION_SIDE + localX;
+        // Convert to region-local coordinates and calculate index
+        return (chunkZ % CHUNKS_PER_REGION_SIDE) * CHUNKS_PER_REGION_SIDE + (chunkX % CHUNKS_PER_REGION_SIDE);
+    }
+
+    /**
+     * Standardized method for converting chunk coordinates to region-local index.
+     * Uses the formula: (z % 32) * 32 + (x % 32)
+     *
+     * @param chunkX the chunk X coordinate
+     * @param chunkZ the chunk Z coordinate
+     * @return the chunk index (0-1023) within the region
+     */
+    public static int chunkCoordinatesToIndex(int chunkX, int chunkZ)
+    {
+        return (chunkZ % CHUNKS_PER_REGION_SIDE) * CHUNKS_PER_REGION_SIDE + (chunkX % CHUNKS_PER_REGION_SIDE);
     }
 
     /**
@@ -264,6 +277,41 @@ public class AnvilUtils
         int globalChunkZ = regionZ * CHUNKS_PER_REGION_SIDE + localZ;
         
         return new int[]{globalChunkX, globalChunkZ};
+    }
+
+    /**
+     * Creates a Location object from offset and sector count values.
+     * Encodes the values into the 4-byte format expected by the Location constructor.
+     *
+     * @param offset the chunk offset in sectors (3 bytes, max value 16777215)
+     * @param sectorCount the number of sectors (1 byte, max value 255)
+     * @return a new Location object
+     * @throws IllegalArgumentException if values are out of range
+     */
+    public static Location createLocation(int offset, int sectorCount)
+    {
+        if (offset < 0 || offset > 16777215) // 3 bytes max value
+        {
+            throw new IllegalArgumentException("Offset must be between 0 and 16777215, got: " + offset);
+        }
+        
+        if (sectorCount < 0 || sectorCount > 255) // 1 byte max value
+        {
+            throw new IllegalArgumentException("Sector count must be between 0 and 255, got: " + sectorCount);
+        }
+        
+        // Encode into 4-byte array: [offset (3 bytes, big-endian)][sectorCount (1 byte)]
+        byte[] locationBytes = new byte[4];
+        
+        // Write offset as 3 bytes (big-endian)
+        locationBytes[0] = (byte) ((offset >> 16) & 0xFF);
+        locationBytes[1] = (byte) ((offset >> 8) & 0xFF);
+        locationBytes[2] = (byte) (offset & 0xFF);
+        
+        // Write sector count as 1 byte
+        locationBytes[3] = (byte) sectorCount;
+        
+        return new Location(locationBytes);
     }
 
     /**

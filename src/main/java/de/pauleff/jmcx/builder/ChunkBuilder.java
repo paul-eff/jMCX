@@ -2,10 +2,16 @@ package de.pauleff.jmcx.builder;
 
 import de.pauleff.jmcx.api.IChunk;
 import de.pauleff.jmcx.core.Chunk;
+import de.pauleff.jmcx.core.ChunkPayload;
 import de.pauleff.jmcx.core.Location;
 import de.pauleff.jnbt.api.ICompoundTag;
+import de.pauleff.jnbt.formats.binary.NBTWriter;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 import static de.pauleff.jmcx.util.AnvilConstants.CHUNKS_PER_REGION;
 import static de.pauleff.jmcx.util.AnvilConstants.CHUNKS_PER_REGION_SIDE;
@@ -18,7 +24,9 @@ public class ChunkBuilder
 {
     private int chunkX;
     private int chunkZ;
-    private int dataVersion = 4325; // Default to 1.20.5 data version (https://minecraft.wiki/w/Data_version)
+    private boolean xExplicitlySet = false;
+    private boolean zExplicitlySet = false;
+    private int dataVersion = 4325; // Default to 1.21.5 data version (https://minecraft.wiki/w/Data_version)
     private int timestamp;
     private ICompoundTag nbtData;
     private byte compressionType = 2; // Default to Zlib compression
@@ -53,6 +61,8 @@ public class ChunkBuilder
         ChunkBuilder builder = new ChunkBuilder();
         builder.chunkX = chunk.getX();
         builder.chunkZ = chunk.getZ();
+        builder.xExplicitlySet = true;
+        builder.zExplicitlySet = true;
         builder.dataVersion = chunk.getDataVersion();
         builder.timestamp = chunk.getTimestamp();
         builder.index = chunk.getIndex();
@@ -69,6 +79,11 @@ public class ChunkBuilder
         {
             builder.nbtData = existingNbt;
         }
+        else
+        {
+            // If source chunk has no NBT data, we'll create a minimal chunk
+            System.out.println("Warning: Source chunk has no NBT data, will create minimal chunk structure");
+        }
         
         return builder;
     }
@@ -84,6 +99,8 @@ public class ChunkBuilder
     {
         this.chunkX = x;
         this.chunkZ = z;
+        this.xExplicitlySet = true;
+        this.zExplicitlySet = true;
         return this;
     }
 
@@ -96,6 +113,7 @@ public class ChunkBuilder
     public ChunkBuilder withX(int x)
     {
         this.chunkX = x;
+        this.xExplicitlySet = true;
         return this;
     }
 
@@ -108,6 +126,7 @@ public class ChunkBuilder
     public ChunkBuilder withZ(int z)
     {
         this.chunkZ = z;
+        this.zExplicitlySet = true;
         return this;
     }
 
@@ -266,10 +285,18 @@ public class ChunkBuilder
     {
         validateBuilder();
         
-        // Calculate index if not set
+        // Calculate index if not set - use region-local coordinates
         if (index == -1)
         {
-            index = calculateChunkIndex(chunkX, chunkZ);
+            index = de.pauleff.jmcx.util.AnvilUtils.chunkCoordinatesToIndex(chunkX, chunkZ);
+        }
+        
+        // Validate that the calculated index is consistent with coordinates
+        int expectedIndex = de.pauleff.jmcx.util.AnvilUtils.chunkCoordinatesToIndex(chunkX, chunkZ);
+        if (index != expectedIndex)
+        {
+            // Update index to match coordinates to ensure consistency
+            index = expectedIndex;
         }
         
         // Create location if not set
@@ -281,57 +308,96 @@ public class ChunkBuilder
         // Create minimal NBT data if not provided
         if (nbtData == null)
         {
-            // For now, we'll create an empty chunk without NBT data
-            // The actual NBT creation will be handled by the application layer
-            // This allows the builder to work without requiring complex NBT construction
+            // Create chunk with empty payload
+            Chunk chunk = new Chunk(index, location, timestamp, new byte[0]);
+            return chunk;
         }
         else
         {
-            // Validate NBT data has correct structure
+            // Update NBT coordinates to match builder settings
             updateNBTCoordinates();
+            
+            // Create NBT payload before constructing chunk so coordinates are read correctly
+            byte[] nbtPayload = createNBTPayload();
+            
+            // Calculate sector count needed for the payload and update location
+            int sectorCount = de.pauleff.jmcx.util.AnvilUtils.calculateSectorCount(nbtPayload.length);
+            location = de.pauleff.jmcx.util.AnvilUtils.createLocation(0, sectorCount); // offset will be set by region when writing
+            
+            // Create chunk with NBT payload so constructor can read coordinates
+            Chunk chunk = new Chunk(index, location, timestamp, nbtPayload);
+            return chunk;
         }
-        
-        // Create chunk with empty payload first
-        Chunk chunk = new Chunk(index, location, timestamp, new byte[0]);
-        
-        // Set the NBT data only if provided (this will compress it appropriately)
-        if (nbtData != null)
-        {
-            chunk.setNBTData(nbtData);
-        }
-        
-        return chunk;
     }
 
     /**
-     * Calculates the chunk index within a region based on chunk coordinates.
+     * Creates a compressed NBT payload from the NBT data.
+     * Uses the same format as Chunk.setNBTData() and ChunkPayload.
      *
-     * @param chunkX the chunk X coordinate
-     * @param chunkZ the chunk Z coordinate
-     * @return the chunk index (0-1023)
+     * @return compressed NBT payload as byte array
+     * @throws IOException if NBT serialization fails
      */
-    private int calculateChunkIndex(int chunkX, int chunkZ)
+    private byte[] createNBTPayload() throws IOException
     {
-        // Convert to region-local coordinates
-        int localX = chunkX % CHUNKS_PER_REGION_SIDE; // chunkX % 32
-        int localZ = chunkZ % CHUNKS_PER_REGION_SIDE; // chunkZ % 32
-        return localZ * CHUNKS_PER_REGION_SIDE + localX;
+        if (nbtData == null) {
+            return new byte[0];
+        }
+        
+        // Convert NBT data to raw bytes using NBTWriter (same as Chunk.setNBTData())
+        ByteArrayOutputStream byteOutput = new ByteArrayOutputStream();
+        try (DataOutputStream dos = new DataOutputStream(byteOutput);
+             NBTWriter writer = new NBTWriter(dos))
+        {
+            writer.write(nbtData);
+        }
+        byte[] nbtBytes = byteOutput.toByteArray();
+        
+        // Compress the NBT data using ChunkPayload's compression logic
+        ChunkPayload tempPayload = new ChunkPayload(new byte[0]); // Create temporary payload for compression
+        byte[] compressedData = tempPayload.compressData(nbtBytes, compressionType);
+        
+        // Create the final payload with proper format: [4-byte length][1-byte compression type][compressed data]
+        // Length field should contain only the compressed data length (excluding compression type byte)
+        ByteBuffer buffer = ByteBuffer.allocate(5 + compressedData.length).order(ByteOrder.BIG_ENDIAN);
+        buffer.putInt(compressedData.length); // Only compressed data length
+        buffer.put(compressionType);
+        buffer.put(compressedData);
+        
+        return buffer.array();
     }
 
+
     /**
-     * Updates the NBT data to ensure coordinates and data version match builder settings.
-     * Note: This is a simplified implementation that validates the NBT data has the expected structure.
+     * Updates the NBT data to ensure coordinates match builder settings.
+     * Priority: builder coordinates > NBT coordinates > defaults (0,0)
      */
     private void updateNBTCoordinates()
     {
         if (nbtData == null) return;
         
-        // Basic validation that the NBT data contains expected tags
-        // More sophisticated coordinate updating would require NBT modification capabilities
-        if (!nbtData.hasTag("xPos") || !nbtData.hasTag("zPos") || !nbtData.hasTag("DataVersion"))
-        {
-            System.err.println("Warning: NBT data may not have correct chunk coordinates or data version");
+        // Determine final coordinates based on priority for each axis independently:
+        // 1. If X/Z was explicitly set via builder methods, use builder value
+        // 2. Otherwise, if NBT has X/Z coordinates, use those and update builder state
+        // 3. Otherwise, use builder defaults (0,0)
+        
+        int finalX = chunkX;
+        int finalZ = chunkZ;
+        
+        // Handle X coordinate
+        if (!xExplicitlySet && nbtData.hasTag("xPos")) {
+            finalX = nbtData.getInt("xPos");
+            this.chunkX = finalX; // Update builder state
         }
+        
+        // Handle Z coordinate
+        if (!zExplicitlySet && nbtData.hasTag("zPos")) {
+            finalZ = nbtData.getInt("zPos");
+            this.chunkZ = finalZ; // Update builder state
+        }
+        
+        // Always ensure NBT has the final coordinates
+        nbtData.setInt("xPos", finalX);
+        nbtData.setInt("zPos", finalZ);
     }
 
     /**
@@ -352,7 +418,10 @@ public class ChunkBuilder
         
         if (dataVersion <= 0)
         {
-            throw new IllegalStateException("Data version must be positive, got: " + dataVersion);
+            // If data version is 0 or negative, set it to a reasonable default
+            // This handles empty/corrupt chunks that don't have valid NBT data
+            System.out.println("Warning: Invalid data version (" + dataVersion + "), setting to default 4325");
+            this.dataVersion = 4325; // Default to 1.21.5 data version
         }
         
         if (timestamp < 0)

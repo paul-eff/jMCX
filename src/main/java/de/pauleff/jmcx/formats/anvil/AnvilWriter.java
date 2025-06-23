@@ -14,8 +14,6 @@ import static de.pauleff.jmcx.util.AnvilConstants.SECTOR_SIZE_BYTES;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
@@ -45,18 +43,46 @@ public class AnvilWriter implements IAnvilWriter
             Files.copy(anvilFile.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
             System.out.printf("Created backup of file %s%n", anvilFile.getName());
         }
-        // Write Header (locations, timestamps)
-        for (IChunk iChunk : region.getChunks())
+        
+        // Step 1: Allocate proper sectors for all chunks that have data
+        int currentSectorOffset = 2; // Start after header (2 sectors = 8KiB)
+        
+        for (int i = 0; i < region.getChunks().size(); i++)
         {
+            IChunk iChunk = region.getChunks().get(i);
             Chunk chunk = (Chunk) iChunk;
-            raf.seek(chunk.getIndex() * 4L);
+            
+            if (chunk.getDataSize() > 0)
+            {
+                // Get the actual payload size
+                byte[] fullPayload = chunk.getPayload().getFullPayload();
+                int sectorsNeeded = AnvilUtils.calculateSectorCount(fullPayload.length);
+                
+                // Update chunk location with proper sector allocation
+                chunk.getLocation().setOffset(currentSectorOffset);
+                chunk.getLocation().setSectorCount(sectorsNeeded);
+                
+                currentSectorOffset += sectorsNeeded;
+            }
+            else
+            {
+                // Empty chunk - set to 0 offset and 0 sectors
+                chunk.getLocation().setOffset(0);
+                chunk.getLocation().setSectorCount(0);
+            }
+        }
+        
+        // Step 2: Write Header (locations, timestamps) - write in array order
+        for (int i = 0; i < region.getChunks().size(); i++)
+        {
+            IChunk iChunk = region.getChunks().get(i);
+            Chunk chunk = (Chunk) iChunk;
+            
+            // Write header entry at position i (array index corresponds to file header position)
+            raf.seek(i * 4L);
             int offset = chunk.getLocation().getOffset();
             int sectorCount = chunk.getLocation().getSectorCount();
 
-            if (chunk.getIndex() < 0 || chunk.getIndex() >= CHUNKS_PER_REGION)
-            {
-                throw new IllegalArgumentException("Chunk index out of bounds (0-" + (CHUNKS_PER_REGION - 1) + "): " + chunk.getIndex());
-            }
             if (offset < 0 || offset > 0xFFFFFF)
             { // 3-byte limit (24 bits)
                 throw new IllegalArgumentException("Sector offset out of range: " + offset);
@@ -70,26 +96,23 @@ public class AnvilWriter implements IAnvilWriter
             raf.writeByte((offset >> 8) & 0xFF);
             raf.writeByte(offset & 0xFF);
             raf.writeByte(chunk.getLocation().getSectorCount() & 0xFF);
-            raf.seek(chunk.getIndex() * 4L + (long) SECTOR_SIZE_BYTES);
+            
+            // Write timestamp
+            raf.seek(i * 4L + (long) SECTOR_SIZE_BYTES);
             raf.writeInt(chunk.getTimestamp());
         }
 
-        // Write Chunks + padding
+        // Step 3: Write chunk data in sector order
         for (IChunk iChunk : region.getChunks())
         {
             Chunk chunk = (Chunk) iChunk;
-            if (chunk.getLocation().getOffset() == 0) continue;
+            if (chunk.getLocation().getOffset() == 0) continue; // Skip empty chunks
+            
             raf.seek(chunk.getLocation().getOffset() * (long) SECTOR_SIZE_BYTES);
 
-            int length = chunk.getPayload().getLength();
-            int compressionType = chunk.getPayload().getCompressionType();
-            byte[] data = chunk.getPayload().getData();
-
-            ByteBuffer buffer = ByteBuffer.allocate(5 + data.length).order(ByteOrder.BIG_ENDIAN);
-            buffer.putInt(length);
-            buffer.put((byte) compressionType);
-            buffer.put(data);
-            byte[] paddedData = AnvilUtils.padToSectorSize(buffer.array());
+            // Get the complete payload (length + compression type + data)
+            byte[] fullPayload = chunk.getPayload().getFullPayload();
+            byte[] paddedData = AnvilUtils.padToSectorSize(fullPayload);
 
             // Validate that the chunk offset is sector-aligned
             long writeOffset = chunk.getLocation().getOffset() * (long) SECTOR_SIZE_BYTES;
@@ -144,6 +167,11 @@ public class AnvilWriter implements IAnvilWriter
     public boolean canWrite()
     {
         return anvilFile.canWrite() || (!anvilFile.exists() && anvilFile.getParentFile().canWrite());
+    }
+
+    public void setBackupEnabled(boolean enabled)
+    {
+        this.backupEnabled = enabled;
     }
 
     @Override
