@@ -115,4 +115,11 @@ public interface IChunk
      * @return the data size in bytes
      */
     int getDataSize();
+    
+    /**
+     * Checks if NBT data has been loaded into memory (for lazy loading implementations).
+     *
+     * @return true if NBT data is currently loaded
+     */
+    boolean isNBTLoaded();
 }

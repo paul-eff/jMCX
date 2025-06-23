@@ -1,7 +1,5 @@
 package de.pauleff.jmcx.api;
 
-import static de.pauleff.jmcx.util.AnvilConstants.CHUNKS_PER_REGION;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;

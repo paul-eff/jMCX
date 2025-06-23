@@ -19,6 +19,8 @@ import java.util.Optional;
 /**
  * The Region class represents a region in the Anvil file format.
  * It handles reading chunk data from a region file.
+ * 
+ * @author Paul Ferlitz
  */
 public class Region implements IRegion
 {
@@ -86,9 +88,18 @@ public class Region implements IRegion
         {
             throw new IllegalArgumentException("Chunk must be an instance of de.pauleff.jmcx.core.Chunk");
         }
-        int offset = 4 * ((concreteChunk.getX() % CHUNKS_PER_REGION_SIDE) + (concreteChunk.getZ() % CHUNKS_PER_REGION_SIDE) * CHUNKS_PER_REGION_SIDE);
-        concreteChunk.getLocation().setOffset(offset);
-        this.chunks.set(concreteChunk.getIndex(), concreteChunk);
+        
+        // Calculate the correct region-local index for the chunk coordinates
+        int targetIndex = AnvilUtils.chunkCoordinatesToIndex(concreteChunk.getX(), concreteChunk.getZ());
+        
+        // Validate that the chunk belongs to this region
+        if (!containsChunk(concreteChunk.getX(), concreteChunk.getZ()))
+        {
+            throw new IllegalArgumentException(
+                String.format("Chunk at (%d, %d) does not belong to region (%d, %d)", 
+                    concreteChunk.getX(), concreteChunk.getZ(), this.x, this.z));
+        }
+        this.chunks.set(targetIndex, concreteChunk);
     }
 
     /**
@@ -156,37 +167,54 @@ public class Region implements IRegion
         for (int i = 0; i < locationsCount; i++)
         {
             Location currLocation = locations[i];
-            raf.seek(currLocation.getOffset() * (long) SECTOR_SIZE_BYTES);
-            byte[] chunkData = new byte[currLocation.getSectorCount() * SECTOR_SIZE_BYTES];
-            raf.read(chunkData);
-            chunks.add(new Chunk(i, locations[i], timestamps[i], chunkData));
+            if (currLocation.getOffset() == 0 && currLocation.getSectorCount() == 0)
+            {
+                // Empty chunk - create with empty payload
+                chunks.add(new Chunk(i, locations[i], timestamps[i], new byte[0]));
+            }
+            else
+            {
+                // Read chunk data from file
+                raf.seek(currLocation.getOffset() * (long) SECTOR_SIZE_BYTES);
+                byte[] chunkData = new byte[currLocation.getSectorCount() * SECTOR_SIZE_BYTES];
+                raf.read(chunkData);
+                chunks.add(new Chunk(i, locations[i], timestamps[i], chunkData));
+            }
         }
         return chunks;
-    }
-
-    /**
-     * WIP!!! Reads a specific chunk from the region file.
-     *
-     * @param x the x-coordinate of the chunk
-     * @param z the z-coordinate of the chunk
-     * @return the chunk object
-     * @throws IOException if an I/O error occurs
-     */
-    public Chunk readChunk(int x, int z) throws IOException
-    {
-        int offset = 4 * ((x % CHUNKS_PER_REGION_SIDE) + (z % CHUNKS_PER_REGION_SIDE) * CHUNKS_PER_REGION_SIDE);
-        // TODO: Implement full method when needed
-        //return new Chunk(offset, readLocation(offset), readTimestamp(offset), readChunkData(offset));
-        return null;
     }
 
     @Override
     public Optional<IChunk> getChunk(int chunkX, int chunkZ)
     {
-        for (Chunk chunk : chunks)
+        // First check if the requested coordinates are within this region
+        if (!containsChunk(chunkX, chunkZ))
         {
-            if (chunk.getX() == chunkX && chunk.getZ() == chunkZ)
+            return Optional.empty();
+        }
+        
+        int index = AnvilUtils.chunkCoordinatesToIndex(chunkX, chunkZ);
+        if (index >= 0 && index < chunks.size())
+        {
+            Chunk chunk = chunks.get(index);
+            if (chunk != null && !chunk.isEmpty())
             {
+                // For non-empty chunks, verify coordinates match
+                if (chunk.getX() == chunkX && chunk.getZ() == chunkZ)
+                {
+                    return Optional.of(chunk);
+                }
+                else
+                {
+                    // Coordinates mismatch - this indicates a bug in chunk placement
+                    System.err.println(String.format("WARNING: Retrieved chunk position [%d, %d] does not match requested [%d, %d] at index %d", 
+                        chunk.getX(), chunk.getZ(), chunkX, chunkZ, index));
+                    return Optional.empty();
+                }
+            }
+            else if (chunk != null)
+            {
+                // Empty chunk at correct index - return it
                 return Optional.of(chunk);
             }
         }

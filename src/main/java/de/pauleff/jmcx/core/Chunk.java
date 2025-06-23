@@ -17,6 +17,8 @@ import java.io.IOException;
 /**
  * The Chunk class represents a chunk in the Anvil file format.
  * Uses jNBT library for type-safe NBT data handling.
+ * 
+ * @author Paul Ferlitz
  */
 public class Chunk implements IChunk
 {
@@ -27,6 +29,8 @@ public class Chunk implements IChunk
     private final Location location;
     private final int timestamp;
     private final ChunkPayload payload;
+    private ICompoundTag cachedNBTData;
+    private boolean nbtLoaded = false;
 
     /**
      * Constructs a Chunk object.
@@ -43,70 +47,99 @@ public class Chunk implements IChunk
         this.location = location;
         this.timestamp = timestamp;
         this.payload = new ChunkPayload(payload);
-        // If there is an actual payload to process
+        
+        // Parse coordinates and data version from NBT data
         if (this.payload.getLength() > 0)
         {
-            try (DataInputStream inputStream = new DataInputStream(new ByteArrayInputStream(this.payload.getDecompressedData()));
-                 NBTReader reader = new NBTReader(inputStream))
-            {
-                ICompoundTag root = reader.read();
-
-                // Check for entity file format (Position tag)
-                if (root.hasTag("Position"))
-                {
-                    // If Position is found, we are dealing with an entity file
-                    // TODO: Implement this: int[] coords = root.getIntArray("Position");
-                    int[] coords = new int[3];
-                    if (coords.length >= 2)
-                    {
-                        this.x = coords[0];
-                        this.z = coords[1];
-                    } else
-                    {
-                        throw new IOException("Invalid entity file format: Position array too short");
-                    }
-                }
-                // Check for POI file format (pos tag)
-                else if (root.hasTag("pos"))
-                {
-                    // If pos is found, we are dealing with a poi file
-                    // TODO: Implement this: int[] coords = root.getIntArray("pos");
-                    int[] coords = new int[3];
-                    if (coords.length >= 3)
-                    {
-                        this.x = coords[0];
-                        this.z = coords[2];
-                    } else
-                    {
-                        throw new IOException("Invalid POI file format: pos array too short");
-                    }
-                } else
-                {
-                    // Standard region file format
-                    if (root.hasTag("xPos") && root.hasTag("zPos"))
-                    {
-                        this.x = root.getInt("xPos");
-                        this.z = root.getInt("zPos");
-                    } else
-                    {
-                        throw new IOException("Invalid chunk format: missing xPos/zPos tags");
-                    }
-                }
-
-                // Get data version
-                if (root.hasTag("DataVersion"))
-                {
-                    this.dataVersion = root.getInt("DataVersion");
-                } else
-                {
-                    throw new IOException("Invalid chunk format: missing DataVersion tag");
-                }
-            }
+            CoordinateData coordData = parseCoordinatesAndVersion();
+            this.x = coordData.x;
+            this.z = coordData.z;
+            this.dataVersion = coordData.dataVersion;
         } else
         {
             this.x = 0;
             this.z = 0;
             this.dataVersion = 0;
+        }
+    }
+    
+    /**
+     * Simple data class to hold coordinate and version data.
+     */
+    private static class CoordinateData
+    {
+        final int x;
+        final int z;
+        final int dataVersion;
+        
+        CoordinateData(int x, int z, int dataVersion)
+        {
+            this.x = x;
+            this.z = z;
+            this.dataVersion = dataVersion;
+        }
+    }
+    
+    /**
+     * Parses coordinates and data version from NBT without caching the full NBT data.
+     */
+    private CoordinateData parseCoordinatesAndVersion() throws IOException
+    {
+        try (DataInputStream inputStream = new DataInputStream(new ByteArrayInputStream(this.payload.getDecompressedData()));
+             NBTReader reader = new NBTReader(inputStream))
+        {
+            ICompoundTag root = reader.read();
+
+            int x, z, dataVersion;
+            
+            // Check for entity file format (Position tag)
+            if (root.hasTag("Position"))
+            {
+                int[] coords = root.getIntArray("Position");
+                if (coords.length >= 2)
+                {
+                    x = coords[0];
+                    z = coords[1];
+                } else
+                {
+                    throw new IOException("Invalid entity file format: Position array too short");
+                }
+            }
+            // Check for POI file format (pos tag)
+            else if (root.hasTag("pos"))
+            {
+                int[] coords = root.getIntArray("pos");
+                if (coords.length >= 3)
+                {
+                    x = coords[0];
+                    z = coords[2];
+                } else
+                {
+                    throw new IOException("Invalid POI file format: pos array too short");
+                }
+            } else
+            {
+                // Standard region file format
+                if (root.hasTag("xPos") && root.hasTag("zPos"))
+                {
+                    x = root.getInt("xPos");
+                    z = root.getInt("zPos");
+                } else
+                {
+                    throw new IOException("Invalid chunk format: missing xPos/zPos tags");
+                }
+            }
+
+            // Get data version
+            if (root.hasTag("DataVersion"))
+            {
+                dataVersion = root.getInt("DataVersion");
+            } else
+            {
+                throw new IOException("Invalid chunk format: missing DataVersion tag");
+            }
+            
+            return new CoordinateData(x, z, dataVersion);
         }
     }
 
@@ -122,7 +155,8 @@ public class Chunk implements IChunk
     }
 
     /**
-     * Gets the NBT root compound tag for this chunk.
+     * Gets the NBT root compound tag for this chunk with lazy loading.
+     * NBT data is only decompressed and parsed when first accessed.
      *
      * @return the root compound tag containing chunk data
      * @throws IOException if an error occurs reading the chunk data
@@ -133,12 +167,36 @@ public class Chunk implements IChunk
         {
             return null;
         }
-
+        
+        if (!nbtLoaded)
+        {
+            loadNBTData();
+        }
+        
+        return cachedNBTData;
+    }
+    
+    /**
+     * Loads and caches the NBT data.
+     */
+    private void loadNBTData() throws IOException
+    {
         try (DataInputStream inputStream = new DataInputStream(new ByteArrayInputStream(this.payload.getDecompressedData()));
              NBTReader reader = new NBTReader(inputStream))
         {
-            return reader.read();
+            cachedNBTData = reader.read();
+            nbtLoaded = true;
         }
+    }
+    
+    /**
+     * Checks if NBT data has been loaded into memory.
+     *
+     * @return true if NBT data is currently loaded
+     */
+    public boolean isNBTLoaded()
+    {
+        return nbtLoaded;
     }
 
     /**
@@ -157,6 +215,10 @@ public class Chunk implements IChunk
         }
         byte[] nbtBytes = byteOutput.toByteArray();
         setChunkData(nbtBytes);
+        
+        // Update cached data
+        cachedNBTData = nbtData;
+        nbtLoaded = true;
     }
 
     /**
@@ -243,19 +305,19 @@ public class Chunk implements IChunk
             return false;
         }
 
-        try (DataInputStream inputStream = new DataInputStream(new ByteArrayInputStream(this.payload.getDecompressedData()));
-             NBTReader reader = new NBTReader(inputStream))
+        ICompoundTag root = getNBTData();
+        if (root == null)
         {
-            ICompoundTag root = reader.read();
-
-            // Check for Owner tag (tamed animals, etc.)
-            boolean hasOwner = root.hasTag("Owner");
-
-            // Check for Target tag (hostile mobs with targets)
-            boolean hasTarget = root.hasTag("Target");
-
-            return hasOwner || hasTarget;
+            return false;
         }
+
+        // Check for Owner tag (tamed animals, etc.)
+        boolean hasOwner = root.hasTag("Owner");
+
+        // Check for Target tag (hostile mobs with targets)
+        boolean hasTarget = root.hasTag("Target");
+
+        return hasOwner || hasTarget;
     }
 
     /**
