@@ -1,6 +1,8 @@
 package de.pauleff.jmcx.core;
 
 import de.pauleff.jmcx.api.IChunk;
+import de.pauleff.jmcx.util.AnvilConstants;
+import de.pauleff.jmcx.util.AnvilUtils;
 import de.pauleff.jnbt.api.ICompoundTag;
 import de.pauleff.jnbt.formats.binary.NBTReader;
 import de.pauleff.jnbt.formats.binary.NBTWriter;
@@ -302,7 +304,7 @@ public class Chunk implements IChunk
     @Override
     public int[] chunkToRegionCoordinate()
     {
-        return new int[]{this.x / CHUNKS_PER_REGION_SIDE, this.z / CHUNKS_PER_REGION_SIDE};
+        return AnvilUtils.chunkToRegion(this.x, this.z);
     }
 
     /**
@@ -315,9 +317,8 @@ public class Chunk implements IChunk
     @Override
     public boolean isBlockInChunk(int blockX, int blockZ)
     {
-        int chunkX = blockX / BLOCKS_PER_CHUNK_SIDE;
-        int chunkZ = blockZ / BLOCKS_PER_CHUNK_SIDE;
-        return (chunkX == this.x && chunkZ == this.z);
+        int[] chunkCoordinate = AnvilUtils.blockToChunk(blockX, blockZ);
+        return (chunkCoordinate[0] == this.x && chunkCoordinate[1] == this.z);
     }
 
     /**
@@ -330,7 +331,7 @@ public class Chunk implements IChunk
     {
         int[] regionCoordinate = chunkToRegionCoordinate();
         int chunkX = regionCoordinate[0] + (this.index % CHUNKS_PER_REGION_SIDE * BLOCKS_PER_CHUNK_SIDE);
-        int chunkZ = regionCoordinate[1] + (this.index % CHUNKS_PER_REGION_SIDE * BLOCKS_PER_CHUNK_SIDE);
+        int chunkZ = regionCoordinate[1] + (this.index / CHUNKS_PER_REGION_SIDE * BLOCKS_PER_CHUNK_SIDE);
         return new int[]{chunkX, chunkZ};
     }
 

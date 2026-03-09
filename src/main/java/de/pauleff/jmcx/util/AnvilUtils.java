@@ -116,8 +116,8 @@ public class AnvilUtils
      */
     public static int[] blockToChunk(int blockX, int blockZ)
     {
-        int chunkX = blockX / BLOCKS_PER_CHUNK_SIDE;
-        int chunkZ = blockZ / BLOCKS_PER_CHUNK_SIDE;
+        int chunkX = blockX >> BLOCKS_PER_CHUNK_SIDE_SHIFT;
+        int chunkZ = blockZ >> BLOCKS_PER_CHUNK_SIDE_SHIFT;
         return new int[]{chunkX, chunkZ};
     }
 
@@ -130,8 +130,8 @@ public class AnvilUtils
      */
     public static int[] chunkToRegion(int chunkX, int chunkZ)
     {
-        int regionX = chunkX / CHUNKS_PER_REGION_SIDE;
-        int regionZ = chunkZ / CHUNKS_PER_REGION_SIDE;
+        int regionX = chunkX >> CHUNKS_PER_REGION_SIDE_SHIFT;
+        int regionZ = chunkZ >> CHUNKS_PER_REGION_SIDE_SHIFT;
         return new int[]{regionX, regionZ};
     }
 
@@ -229,7 +229,7 @@ public class AnvilUtils
      */
     public static int chunkCoordinatesToIndex(int chunkX, int chunkZ)
     {
-        return (chunkZ % CHUNKS_PER_REGION_SIDE) * CHUNKS_PER_REGION_SIDE + (chunkX % CHUNKS_PER_REGION_SIDE);
+        return Math.floorMod(chunkZ, CHUNKS_PER_REGION_SIDE) * CHUNKS_PER_REGION_SIDE + Math.floorMod(chunkX, CHUNKS_PER_REGION_SIDE);
     }
 
     /**

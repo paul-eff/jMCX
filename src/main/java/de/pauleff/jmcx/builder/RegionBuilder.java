@@ -6,6 +6,7 @@ import de.pauleff.jmcx.api.IRegion;
 import de.pauleff.jmcx.core.Chunk;
 import de.pauleff.jmcx.core.Location;
 import de.pauleff.jmcx.core.Region;
+import de.pauleff.jmcx.util.AnvilUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -264,8 +265,8 @@ public class RegionBuilder
      */
     private int calculateChunkIndex(int chunkX, int chunkZ)
     {
-        int localX = chunkX % CHUNKS_PER_REGION_SIDE;
-        int localZ = chunkZ % CHUNKS_PER_REGION_SIDE;
+        int localX = Math.floorMod(chunkX, CHUNKS_PER_REGION_SIDE);
+        int localZ = Math.floorMod(chunkZ, CHUNKS_PER_REGION_SIDE);
         return localZ * CHUNKS_PER_REGION_SIDE + localX;
     }
 
@@ -277,8 +278,9 @@ public class RegionBuilder
      */
     private void validateChunkCoordinates(IChunk chunk)
     {
-        int expectedRegionX = chunk.getX() / CHUNKS_PER_REGION_SIDE;
-        int expectedRegionZ = chunk.getZ() / CHUNKS_PER_REGION_SIDE;
+        int[] expectedRegions = AnvilUtils.chunkToRegion(chunk.getX(), chunk.getZ());
+        int expectedRegionX = expectedRegions[0];
+        int expectedRegionZ = expectedRegions[1];
 
         if (expectedRegionX != regionX || expectedRegionZ != regionZ)
         {
