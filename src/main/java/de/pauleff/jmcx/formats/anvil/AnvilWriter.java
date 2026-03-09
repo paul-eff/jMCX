@@ -208,7 +208,6 @@ public class AnvilWriter implements IAnvilWriter
      *
      * @param region {@link IRegion} to validate
      * @return true if valid
-     * @throws IOException if validation fails
      */
     @Override
     public boolean validateRegion(IRegion region)
@@ -225,7 +224,6 @@ public class AnvilWriter implements IAnvilWriter
      *
      * @param chunk {@link IChunk} to validate
      * @return true if valid
-     * @throws IOException if validation fails
      */
     @Override
     public boolean validateChunk(IChunk chunk)
