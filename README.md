@@ -1,4 +1,4 @@
-# jMCX v1.1.0
+# jMCX
 
 <div align="center">
 
@@ -11,17 +11,30 @@
 
 </div>
 
-## ✨ Features
+## Features
 
 **jMCX** provides a comprehensive solution for Minecraft world file manipulation with clean, efficient APIs:
 
-- 🎯 **Complete Anvil Region Format Support** - Read, edit, and write .mca region files
-- 🛠️ **Fluent Builder API** - Modern builder pattern for easy structure creation
-- 📦 **Smart Compression** - Automatic detection and support for GZIP, ZLIB, and uncompressed files
-- 🔧 **Interface-Based Design** - Clean APIs
-- ⚡ **Type Safety** - Minimal casting
+- **Complete Anvil Region Format Support** - Read, edit, and write .mca region files
+- **Fluent Builder API** - Modern builder pattern for easy structure creation
+- **Smart Compression** - Automatic detection and support for GZIP, ZLIB, and uncompressed files
 
-## 🚀 Quick Start
+## Installation
+
+You can either import the [latest relase](https://github.com/paul-eff/jMCX/releases/latest) `.jar` file directly as a dependency via your IDE.
+
+Or use a build system of your choosing (e.g. Maven):
+```xml
+<dependencies>
+    <dependency>
+        <groupId>de.pauleff</groupId>
+        <artifactId>jmcx</artifactId>
+        <version>1.1.0</version>
+    </dependency>
+<dependencies>
+```
+
+## Quick Start
 
 **Read region file:**
 ```java
@@ -76,35 +89,35 @@ for (Chunk chunk : ownableChunks) {
 }
 ```
 
-## 📋 Status
+## Status
 
-### ✅ Supported
+### Supported
 - Complete CRUD operations (Create, Read, Update, Delete)
 - Compression formats: **GZIP**, **ZLIB**, **None**
 - Chunk Management: Coordinate extraction, payload handling, ...
 - Many convenience methods (chunkHasOwnableEntities, getChunkByCoordinates, etc.)
 
-### 🔮 Future Plans
+### Future Plans
 - Enhanced editing operations
 - LZ4 compression support
 - Bedrock Region format support
 - McRegion (Alpha) Level format support
 - Graphical interface (maybe!)
 
-## 📖 Documentation
+## Documentation
 
 Explore the `examples/` folder for comprehensive usage patterns.
 
-## 📦 Building
+## Building
 ```bash
-mvn clean package
+mvn clean install
 ```
 
-## ⚠️ Important Notice
+## Important Notice
 
 **Always backup your world files before modification.** While thoroughly tested, data corruption is always possible with world file manipulation tools.
 
-## 🔗 Related Projects
+## Related Projects
 
 This library will be used by:
 - [MinecraftOfflineOnlineConverter](https://github.com/paul-eff/MinecraftOfflineOnlineConverter) - Player data migration with UUID conversion
@@ -112,7 +125,7 @@ This library will be used by:
 Built with:
 - [jNBT](https://github.com/paul-eff/jNBT) - NBT file manipulation
 
-## 📚 References
+## References
 
 - [Region File Format](https://minecraft.wiki/w/Region_file_format)
 - [Chunk Format](https://minecraft.wiki/w/Chunk_format)
